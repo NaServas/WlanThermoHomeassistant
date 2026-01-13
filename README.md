@@ -1,9 +1,9 @@
 # WLANThermo – Home Assistant Integration
 
-![Version](https://img.shields.io/badge/version-0.0.1-informational)
+![Version](https://img.shields.io/badge/version-0.1.2-informational)
 ![Lizenz](https://img.shields.io/badge/license-MIT-green)
-![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024%2B-blue)
-![Support](https://img.shields.io/badge/support-Kein%20Support%20enthalten-lightgrey)
+![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025%2B-blue)
+[![Support](https://img.shields.io/badge/support-WLANThermo%20Forums-lightgrey)](https://wlanthermo.de/forums/)
 ![Owner](https://img.shields.io/badge/code%20owner-@MStapelfeldt-purple)
 
 **Version:** 0.1.2  
@@ -11,7 +11,8 @@
 
 > **Hinweis & Haftungsausschluss**
 > Dies ist eine Community-Integration für WLANThermo.  
-> **Kein Support** durch den Autor. Forks, Weiterentwicklung und Bugfixes sind willkommen.  
+> **Kein Support** durch den Autor. Forks, Weiterentwicklung und Bugfixes sind willkommen. Alle frqagen könnt ihr im [WLANThermo Forum](https://wlanthermo.de/forums/)
+ stellen.  
 > **Keine Gewähr/Haftung** – Nutzung auf eigene Gefahr.
 
 ## Übersicht
