@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.2] - 2026-01-13
+
+### Added
+- New light sensor for color picking.
+- Options flow for advanced settings, including scan interval and authentication.
+- Switch to display sensor temperature as 999 or unavailable.
+- Updated documentation (README, en/de) to reflect new features.
+
+### Improved
+- Enhanced translation support for all status and selection values.
+- Better handling of offline devices during startup.
+
 ## [0.1.1] - 2026-01-09
 
 ### Added
