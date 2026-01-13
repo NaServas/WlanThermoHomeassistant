@@ -28,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 	port = entry.options.get("port", entry.data.get("port", 80))
 	path_prefix = entry.data.get("path_prefix", "/")
 	scan_interval = entry.options.get("scan_interval", 10)
-	model = entry.data.get("model", "select")
 
 	# Create aiohttp session and API instance
 	session = aiohttp_client.async_get_clientsession(hass)
@@ -78,7 +77,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 			"identifiers": {(DOMAIN, host)},
 			"name": device_name,
 			"manufacturer": "WLANThermo",
-			"model": entry.data.get("model", "unknown"),
 			"sw_version": "unknown",
 		}
 
@@ -124,7 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 	entry_data = {
 		"api": api,
 		"scan_interval": scan_interval,
-		"model": model,
 		"coordinator": coordinator,
 		"device_info": device_info,
 		"platforms_setup": set(),
