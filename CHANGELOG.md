@@ -1,4 +1,16 @@
+
 # Changelog
+
+## [0.1.3] - 2026-01-15
+
+### Fixed
+- Sensors now correctly become unavailable and available after device reboot or offline events.
+- Improved device grouping for all sensors, including cloud and diagnostic sensors.
+
+### Changed
+- Refactored `available` property logic for all relevant sensors.
+- Consistent `device_info` property for all entities.
+- Add Pitmaster Temp sensor 
 
 ## [0.1.2] - 2026-01-13
 
