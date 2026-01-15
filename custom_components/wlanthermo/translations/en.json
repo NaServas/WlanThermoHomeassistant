@@ -19,11 +19,6 @@
     },
     "error": {
       "required": "This field is required."
-    },
-    "system_online": {
-    "0": "Not connected",
-    "1": "Standby",
-    "2": "Connected"
     }
   },
   "options": {
@@ -65,5 +60,10 @@
       "min_temperature": {"name": "Min Temperature"},
       "max_temperature": {"name": "Max Temperature"}
     }
+  },
+  "system_online": {
+    "0": "Not connected",
+    "1": "Standby",
+    "2": "Connected"
   }
 }

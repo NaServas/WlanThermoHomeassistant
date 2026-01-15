@@ -4,6 +4,7 @@ Handles setup, teardown, and data coordination for the integration.
 """
 
 from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers import aiohttp_client
@@ -11,7 +12,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import DOMAIN, CONF_PATH_PREFIX, CONF_MODEL
 from .api import WLANThermoApi
 from .data import WlanthermoData
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from datetime import timedelta
 import logging
 
@@ -29,10 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 	path_prefix = entry.data.get("path_prefix", "/")
 	scan_interval = entry.options.get("scan_interval", 10)
 
-	# Create aiohttp session and API instance
-	session = aiohttp_client.async_get_clientsession(hass)
-	api = WLANThermoApi(host, port, path_prefix)
-	api.set_session(session)
+	api = WLANThermoApi(hass, host, port, path_prefix)
+
 
 	device_name = entry.data.get("device_name", "WLANThermo")
 	host = entry.data.get("host")
@@ -84,22 +83,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 	async def async_update_data():
 		"""
-		Fetches the latest data from the device, with retry and exponential backoff.
-		Returns a Wlanthermo Data object or raises the last exception on failure.
+		Fetch both /data and /settings.
+		Do NOT raise UpdateFailed when device is offline.
 		"""
-		max_retries = 3
-		last_exc = None
-		for attempt in range(1, max_retries + 1):
+		try:
+			raw_data = await api.get_data()
+			if not raw_data:
+				_LOGGER.debug("WLANThermo: Device offline (no /data)")
+				return None
+
+			# Try to load settings
 			try:
-				raw = await api.get_data()
-				if not raw:
-					raise Exception("Failed to fetch /data from device")
-				return WlanthermoData(raw)
-			except Exception as exc:
-				last_exc = exc
-				_LOGGER.warning(f"WLANThermo: Error fetching /data (attempt {attempt}): {exc}")
-				await asyncio.sleep(2 * attempt)  # Exponential backoff
-		raise last_exc or Exception("Unknown error fetching /data")
+				raw_settings = await api.get_settings()
+				if raw_settings:
+					api.settings = SettingsData.from_json(raw_settings)
+			except Exception:
+				_LOGGER.debug("WLANThermo: Device offline (no /settings)")
+
+			return WlanthermoData(raw_data)
+
+		except Exception as exc:
+			_LOGGER.debug(f"WLANThermo: Device offline: {exc}")
+			return None
 
 	class DebugDataUpdateCoordinator(DataUpdateCoordinator):
 		"""
@@ -118,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 	)
 	await coordinator.async_refresh()
 
-	# Store all relevant objects in hass.data for access by platforms
+	# Prepare entry_data early so listener can use it
 	entry_data = {
 		"api": api,
 		"scan_interval": scan_interval,
@@ -128,11 +133,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 	}
 	hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry_data
 
-	# List of Home Assistant platforms to set up
 	platforms = ["sensor", "number", "select", "text", "light"]
+
+	# If device is offline at setup → do NOT load platforms
+	if not coordinator.last_update_success:
+		_LOGGER.warning(
+			"WLANThermo: Device offline during setup. Platforms will load when device becomes available."
+		)
+
+		async def _async_start_platforms():
+			if coordinator.last_update_success and not entry_data["platforms_setup"]:
+				await hass.config_entries.async_forward_entry_setups(entry, platforms)
+				entry_data["platforms_setup"].update(platforms)
+
+		coordinator.async_add_listener(_async_start_platforms)
+		return True
+
+	# Device was online → load platforms immediately
 	await hass.config_entries.async_forward_entry_setups(entry, platforms)
 	entry_data["platforms_setup"].update(platforms)
+
 	return True
+
 
 
 # Unload the integration and all platforms
@@ -147,5 +169,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 	results = await asyncio.gather(
 		*(hass.config_entries.async_forward_entry_unload(entry, platform) for platform in platforms)
 	)
-	hass.data[DOMAIN].pop(entry.entry_id)
+	hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
 	return all(results)
+

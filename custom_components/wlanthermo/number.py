@@ -57,15 +57,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Set up number entities for each channel and pitmaster in the config entry.
     """
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+
+    # Device offline? → coordinator.data = None → Plattformen NICHT laden
+    if coordinator.data is None:
+        import logging
+        logging.getLogger(__name__).debug(
+            "WLANThermo Number: coordinator.data is None → skipping platform setup"
+        )
+        return
+
     entities = []
+
     # Channel numbers
     for channel in coordinator.data.channels:
         for field in CHANNEL_NUMBER_FIELDS:
             entities.append(WlanthermoChannelNumber(coordinator, channel, field))
+
     # Pitmaster numbers
     for pitmaster in coordinator.data.pitmasters:
         for field in PITMASTER_NUMBER_FIELDS:
             entities.append(WlanthermoPitmasterNumber(coordinator, pitmaster, field))
+
     async_add_entities(entities)
 
 class WlanthermoChannelNumber(CoordinatorEntity, NumberEntity):

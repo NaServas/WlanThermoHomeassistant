@@ -58,6 +58,7 @@ class Pitmaster:
     def __init__(self, data: Dict[str, Any]):
         self.id: int = int(data.get("id", 0))
         self.channel: int = int(data.get("channel", 0))
+        self.temp: float = float(data.get("temp", 0.0))
         self.pid: int = int(data.get("pid", 0))
         self.value: int = int(data.get("value", 0))
         self.set: float = float(data.get("set", 0.0))

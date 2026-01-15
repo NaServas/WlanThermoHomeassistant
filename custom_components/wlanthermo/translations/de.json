@@ -19,11 +19,6 @@
     },
     "error": {
       "required": "Dieses Feld ist erforderlich."
-    },
-    "system_online": {
-      "0": "Nicht verbunden",
-      "1": "Standby",
-      "2": "Verbunden"
     }
   },
   "options": {
@@ -62,5 +57,10 @@
       "device_info": {"name": "Geräte Info"},
       "channel_entity": {"name": "Kanal {channel_number} {field_name}"}
     }
+  },
+  "system_online": {
+    "0": "Nicht verbunden",
+    "1": "Standby",
+    "2": "Verbunden"
   }
 }

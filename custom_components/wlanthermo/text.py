@@ -16,11 +16,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Set up text entities for each channel (color and name) for WLANThermo.
     """
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+
+    # Device offline? → coordinator.data = None → Plattformen NICHT laden
+    if coordinator.data is None:
+        import logging
+        logging.getLogger(__name__).debug(
+            "WLANThermo Text: coordinator.data is None → skipping platform setup"
+        )
+        return
+
     entities = []
     for channel in coordinator.data.channels:
         entities.append(WlanthermoChannelColorText(coordinator, channel))
         entities.append(WlanthermoChannelNameText(coordinator, channel))
+
     async_add_entities(entities)
+
 
 class WlanthermoChannelColorText(CoordinatorEntity, TextEntity):
     """

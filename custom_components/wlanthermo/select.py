@@ -41,23 +41,35 @@ PITMASTER_SELECT_FIELDS = [
         "options": [0, 1, 2, 3, 4, 5],
     },
 ]
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """
     Set up select entities for each channel and pitmaster in the config entry.
     Populates options from translations and device settings.
     """
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+
+    # Device offline? → coordinator.data = None → Plattformen NICHT laden
+    if coordinator.data is None:
+        import logging
+        logging.getLogger(__name__).debug(
+            "WLANThermo Select: coordinator.data is None → skipping platform setup"
+        )
+        return
+
     entities = []
+
     import json
     import os
     import aiofiles
+
     lang = hass.config.language if hasattr(hass.config, 'language') else 'en'
     translations_path = os.path.join(os.path.dirname(__file__), 'translations', f'{lang}.json')
     if not os.path.exists(translations_path):
         translations_path = os.path.join(os.path.dirname(__file__), 'translations', 'en.json')
+
     async with aiofiles.open(translations_path, encoding='utf-8') as f:
         translations = json.loads(await f.read())
+
     alarm_labels_dict = translations.get("alarm", {})
     alarm_mode_map = {
         0: alarm_labels_dict.get("off", "Off"),
@@ -70,22 +82,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     settings = getattr(hass.data[DOMAIN][config_entry.entry_id]["api"], 'settings', None)
     sensor_types = []
     sensor_type_map = {}
+
     import logging
     _LOGGER = logging.getLogger(__name__)
+
     if settings and hasattr(settings, 'sensors'):
         try:
-            # settings.sensors is a list of SensorType objects
             for idx, s in enumerate(settings.sensors):
                 name = getattr(s, 'name', f"Typ {idx}")
                 sensor_types.append(name)
                 sensor_type_map[name] = idx
         except Exception as e:
             _LOGGER.error(f"WLANThermo: Failed to extract sensor type names as objects: {e}. Trying dict fallback.")
-            # fallback if sensors is a list of dicts
             for i, s in enumerate(settings.sensors):
                 name = s.get('name', f"Typ {i}")
                 sensor_types.append(name)
                 sensor_type_map[name] = i
+
     if not sensor_types:
         _LOGGER.error("WLANThermo: No sensor types found in settings.sensors. Using fallback types.")
         sensor_types = ["Typ 0", "Typ 1", "Typ 2"]
@@ -100,6 +113,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "options": alarm_labels,
             "alarm_mode_map": alarm_mode_map,
         }))
+
         if not getattr(channel, "fixed", False):
             entities.append(WlanthermoChannelSelect(coordinator, channel, {
                 "key": "typ",
@@ -108,14 +122,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 "options": sensor_types,
                 "sensor_type_map": sensor_type_map,
             }))
+
     # Prepare PID profile options for pitmasters
     pid_profiles = []
     pid_profile_names = []
+
     if settings and hasattr(settings, 'pid'):
         pid_profiles = settings.pid
         pid_profile_names = [p.name for p in pid_profiles]
+
     if not pid_profile_names:
         pid_profile_names = ["Profile 0", "Profile 1", "Profile 2"]
+
     # Add select entities for each pitmaster
     for pitmaster in coordinator.data.pitmasters:
         channels = getattr(coordinator.data, 'channels', [])
@@ -145,6 +163,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(WlanthermoPitmasterSelect(coordinator, pitmaster, field, pid_profiles=pid_profiles))
             else:
                 entities.append(WlanthermoPitmasterSelect(coordinator, pitmaster, field))
+
     async_add_entities(entities)
 
 class WlanthermoChannelSelect(CoordinatorEntity, SelectEntity):

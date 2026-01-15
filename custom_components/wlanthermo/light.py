@@ -9,6 +9,27 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import EntityCategory
 from .const import DOMAIN
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """
+    Set up light entities for each channel in the config entry.
+    """
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+
+    # Device offline? → coordinator.data = None → Plattformen NICHT laden
+    if coordinator.data is None:
+        import logging
+        logging.getLogger(__name__).debug(
+            "WLANThermo Light: coordinator.data is None → skipping platform setup"
+        )
+        return
+
+    entities = []
+    for channel in coordinator.data.channels:
+        entities.append(WlanthermoChannelColorLight(coordinator, channel))
+
+    async_add_entities(entities)
+
+
 class WlanthermoChannelColorLight(CoordinatorEntity, LightEntity):
     """
     Light entity representing the color of a WLANThermo channel.
@@ -59,6 +80,8 @@ class WlanthermoChannelColorLight(CoordinatorEntity, LightEntity):
         """
         Entity is available if the channel exists in the latest data.
         """
+        if not self.coordinator.last_update_success:
+            return False
         return self._get_channel() is not None
 
     @property
@@ -138,13 +161,3 @@ class WlanthermoChannelColorLight(CoordinatorEntity, LightEntity):
         Turning off the color light is a no-op (virtual entity).
         """
         return
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """
-    Set up light entities for each channel in the config entry.
-    """
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    entities = []
-    for channel in coordinator.data.channels:
-        entities.append(WlanthermoChannelColorLight(coordinator, channel))
-    async_add_entities(entities)
