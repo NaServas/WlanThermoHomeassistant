@@ -24,7 +24,7 @@ To use the included dashboard (wlanthermo.yaml), please install the following fr
 
 Install these via HACS → Frontend before importing or using the dashboard.
 The dashboard is designed to be as dynamic as possible. However, you must replace all occurrences of `wlanthermo` with your actual device name.
-For example: `device_name: wlanthermo` → `device_name: nano_v3` or `entity_id: sensor.nano_v3_channel_*_temperatur` → `entity_id: sensor.wlanthermo_channel_*_temperatur`
+For example: `device_name: wlanthermo` → `device_name: nano_v3` or `entity_id: sensor.wlanthermo_channel_*_temperatur` → `entity_id: sensor.nano_v3_channel_*_temperatur`
 
 ## Overview
 This integration connects Home Assistant to a WLANThermo (ESP32/Nano/Link/Mini). It reads sensor and pitmaster data and exposes them as entities.
