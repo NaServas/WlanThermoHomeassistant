@@ -7,6 +7,12 @@ Includes diagnostic and device info sensors.
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import UnitOfTemperature
 
 from homeassistant.core import callback
 from .const import DOMAIN
@@ -100,6 +106,9 @@ class WlanthermoChannelTemperatureSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{safe_device_name}_channel_{self._channel_number}_temperatur"
         self.entity_id = f"sensor.{safe_device_name}_channel_{self._channel_number}_temperatur"
         self._attr_icon = "mdi:thermometer"
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def _get_channel(self):
         """
@@ -131,20 +140,21 @@ class WlanthermoChannelTemperatureSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """
         Return the current temperature value, or None if sensor is not connected (999.0).
         """
         channel = self._get_channel()
         if not channel:
             return None
-        temp = getattr(channel, 'temp', None)
+        temp = getattr(channel, "temp", None)
         if temp is None:
             return None  # No temperature data available
-        
-        show_inactive = (
-            self.coordinator.config_entry.options.get("show_inactive_unavailable",
-                self.coordinator.config_entry.data.get("show_inactive_unavailable", True)
+
+        show_inactive = self.coordinator.config_entry.options.get(
+            "show_inactive_unavailable",
+            self.coordinator.config_entry.data.get(
+                "show_inactive_unavailable", True
             )
         )
         if temp == 999.0 and show_inactive:
@@ -1155,19 +1165,19 @@ class WlanthermoPitmasterTemperatureSensor(CoordinatorEntity, SensorEntity):
     """
     def __init__(self, coordinator, pitmaster, device_name):
         super().__init__(coordinator)
+        self._pitmaster_id = pitmaster.id
         self._attr_name = f"Pitmaster {pitmaster.id} Temperature"
-        self._pitmaster_channel = pitmaster.channel 
         self._attr_unique_id = f"{device_name}_pitmaster_{pitmaster.id}_temperature"
         self.entity_id = f"sensor.{device_name}_pitmaster_{pitmaster.id}_temperature"
         self._attr_icon = "mdi:thermometer"
-        self._attr_native_unit_of_measurement = "°C"
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def _get_channel(self):
         """
         Helper to get the channel object associated with the pitmaster.
         """
-        
-        # get latest pitmasters from coordinator data
         pitmasters = getattr(self.coordinator.data, 'pitmasters', [])
         pitmaster = next((pm for pm in pitmasters if pm.id == self._pitmaster_id), None)
         if not pitmaster:
@@ -1176,7 +1186,7 @@ class WlanthermoPitmasterTemperatureSensor(CoordinatorEntity, SensorEntity):
         target_channel_number = getattr(pitmaster, "channel", None)
         if target_channel_number is None:
             return None
-
+        
         channels = getattr(self.coordinator.data, 'channels', [])
         for channel in channels:
             if channel.number == target_channel_number:
@@ -1195,12 +1205,19 @@ class WlanthermoPitmasterTemperatureSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """
         Return the temperature value for the pitmaster's associated channel.
         """
         channel = self._get_channel()
-        return getattr(channel, 'temp', None) if channel else None
+        if not channel:
+            return None
+
+        temp = getattr(channel, "temp", None)
+        if temp == 999.0 and show_inactive:
+            return None
+
+        return temp
 
     @property
     def available(self):
