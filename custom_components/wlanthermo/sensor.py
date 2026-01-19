@@ -5,18 +5,29 @@ Includes diagnostic and device info sensors.
 """
 
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    CoordinatorEntity,
+)
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorDeviceClass,
+)
+from homeassistant.const import (
+    UnitOfTemperature,
+    PERCENTAGE,
+    UnitOfTime,
+)
+
 
 from homeassistant.core import callback
 from .const import DOMAIN
-from datetime import timedelta
+from datetime import timedelta, datetime
 from .data import WlanthermoData
 import logging
 import collections
@@ -104,7 +115,6 @@ class WlanthermoChannelTemperatureSensor(CoordinatorEntity, SensorEntity):
         self._attr_translation_key = "channel_temperature"
         self._attr_translation_placeholders = {"channel_number": str(self._channel_number)}
         self._attr_unique_id = f"{safe_device_name}_channel_{self._channel_number}_temperatur"
-        self.entity_id = f"sensor.{safe_device_name}_channel_{self._channel_number}_temperatur"
         self._attr_icon = "mdi:thermometer"
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -210,9 +220,8 @@ class WlanthermoChannelTimeLeftSensor(CoordinatorEntity, SensorEntity):
         self._attr_translation_key = "channel_time_left"
         self._attr_translation_placeholders = {"channel_number": str(self._channel_number)}
         self._attr_unique_id = f"{safe_device_name}_channel_{self._channel_number}_timeleft"
-        self.entity_id = f"sensor.{safe_device_name}_channel_{self._channel_number}_timeleft"
         self._attr_icon = "mdi:timer"
-        self._attr_native_unit_of_measurement = "min"
+        self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._window_seconds = window_seconds
         self._history = collections.deque(maxlen=60)  # store (timestamp, temp)
 
@@ -238,40 +247,44 @@ class WlanthermoChannelTimeLeftSensor(CoordinatorEntity, SensorEntity):
         return None
     
     @property
-    def state(self):
+    def native_value(self) -> float | None:
         """
         Estimate the time left (in minutes) until the channel reaches its max temperature.
         Uses a moving window of recent temperature readings to calculate the rate of change.
-        Returns None if not enough data or if unavailable.
         """
         import time
         channel = self._get_channel()
-        if not self.available:
+        if not self.available or not channel:
             return None
+
         now = time.time()
-        temp = getattr(channel, 'temp', None)
-        # Add the current timestamp and temperature to the history
+        temp = getattr(channel, "temp", None)
+        if temp is None:
+            return None
+
+        # Add current reading to history
         self._history.append((now, temp))
         window_start = now - self._window_seconds
-        # Only consider recent readings within the window
+
+        # Only consider readings within the time window
         recent = [x for x in self._history if x[0] >= window_start]
         if len(recent) < 2:
             return None
+
         dt = recent[-1][0] - recent[0][0]
         dtemp = recent[-1][1] - recent[0][1]
-        if dt <= 0:
-            return None
-        rate_per_sec = dtemp / dt
-        if rate_per_sec <= 0:
+        if dt <= 0 or dtemp <= 0:
             return 0
-        target = getattr(channel, 'max', None)
+
+        rate_per_sec = dtemp / dt
+        target = getattr(channel, "max", None)
         if target is None:
             return None
-        # Calculate time left in minutes
+
+        # Time left in minutes
         time_left_min = (target - temp) / (rate_per_sec * 60)
-        if time_left_min < 0:
-            return 0
-        return round(time_left_min, 2)
+        return round(max(time_left_min, 0), 2)
+
     
     @property
     def available(self):
@@ -309,7 +322,6 @@ class WlanthermoSystemSensor(CoordinatorEntity, SensorEntity):
         self._device_name = device_name
         self._attr_name = "System"
         self._attr_unique_id = f"{device_name}_system"
-        self.entity_id = f"sensor.{device_name}_system"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
@@ -324,11 +336,12 @@ class WlanthermoSystemSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """
         Return the current system time value.
         """
-        return getattr(self.coordinator.data.system, 'time', None)
+        return None
+        #return getattr(self.coordinator.data.system, 'time', None)
 
     @property
     def extra_state_attributes(self):
@@ -366,7 +379,14 @@ class WlanthermoSystemGetUpdateSensor(CoordinatorEntity, SensorEntity):
         self._system = system
         self._attr_name = "System Update Available"
         self._attr_unique_id = f"{device_name}_system_getupdate"
-        self.entity_id = f"sensor.{device_name}_system_getupdate"
+
+    def _handle_coordinator_update(self):
+         # keep settings.system in sync if coordinator refreshes settings
+        api = self.coordinator.hass.data[DOMAIN][self.coordinator.config_entry.entry_id].get("api")
+        settings = getattr(api, "settings", None)
+        if settings and hasattr(settings, "system"):
+            self._system = settings.system
+        self.async_write_ha_state()
 
     @property
     def device_info(self):
@@ -388,7 +408,7 @@ class WlanthermoSystemGetUpdateSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self) -> str | None:
         """
         Return the update state: can be 'false' or a number (update available).
         """
@@ -412,13 +432,6 @@ class WlanthermoSystemGetUpdateSensor(CoordinatorEntity, SensorEntity):
         if not self.coordinator.last_update_success:
             return False
         return self._system is not None
-    def _handle_coordinator_update(self):
-         # keep settings.system in sync if coordinator refreshes settings
-        api = self.coordinator.hass.data[DOMAIN][self.coordinator.config_entry.entry_id].get("api")
-        settings = getattr(api, "settings", None)
-        if settings and hasattr(settings, "system"):
-            self._system = settings.system
-        self.async_write_ha_state()
 
 class WlanthermoCloudLinkSensor(CoordinatorEntity, SensorEntity):
     """
@@ -429,8 +442,8 @@ class WlanthermoCloudLinkSensor(CoordinatorEntity, SensorEntity):
         self._iot = iot
         self._attr_name = "Cloud Link"
         self._attr_unique_id = f"{device_name}_cloud_link"
-        self.entity_id = f"sensor.{device_name}_cloud_link"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
 
     def _handle_coordinator_update(self):
         api = self.coordinator.hass.data[DOMAIN][self.coordinator.config_entry.entry_id]["api"]
@@ -459,7 +472,7 @@ class WlanthermoCloudLinkSensor(CoordinatorEntity, SensorEntity):
         return None
     
     @property
-    def state(self):
+    def native_value(self) -> str | None:
         """
         Return the cloud link URL if enabled, including the API token if available.
         """
@@ -506,8 +519,9 @@ class WlanthermoSystemTimeSensor(CoordinatorEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "system_time"
         self._attr_unique_id = f"{device_name}_system_time"
-        self.entity_id = f"sensor.{device_name}_system_time"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
+
 
     @property
     def icon(self):
@@ -522,11 +536,7 @@ class WlanthermoSystemTimeSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
-        """
-        Return the system time as a human-readable string (converted from unixtime).
-        """
-        import datetime
+    def native_value(self):
         system = getattr(self.coordinator.data, 'system', None)
         unixtime = getattr(system, 'time', None) if system else None
         if unixtime is None:
@@ -534,7 +544,7 @@ class WlanthermoSystemTimeSensor(CoordinatorEntity, SensorEntity):
         try:
             # Accept both int and str
             ts = int(unixtime)
-            return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+            return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
         except Exception:
             return str(unixtime)
 
@@ -543,10 +553,7 @@ class WlanthermoSystemTimeSensor(CoordinatorEntity, SensorEntity):
         """
         Return True if the device is online.
         """
-        if not self.coordinator.last_update_success:
-            return False
-        system = getattr(self.coordinator.data, 'system', None)
-        return getattr(system, 'online', False) if system else False
+        return self.coordinator.last_update_success
 
 class WlanthermoSystemUnitSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, sys, device_name):
@@ -555,12 +562,8 @@ class WlanthermoSystemUnitSensor(CoordinatorEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "temperature_unit"
         self._attr_unique_id = f"{device_name}_system_unit"
-        self.entity_id = f"sensor.{device_name}_system_unit"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def icon(self):
-        return "mdi:thermometer"
+        self._attr_icon = "mdi:thermometer"
     
     @property
     def device_info(self):
@@ -571,7 +574,7 @@ class WlanthermoSystemUnitSensor(CoordinatorEntity, SensorEntity):
         return None
     
     @property
-    def state(self):
+    def native_value(self) -> str | None:
         return getattr(self._sys, 'unit', None)
 
     @property
@@ -592,8 +595,11 @@ class WlanthermoSystemSocSensor(CoordinatorEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "battery_level"
         self._attr_unique_id = f"{device_name}_system_soc"
-        self.entity_id = f"sensor.{device_name}_system_soc"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_device_class = SensorDeviceClass.BATTERY
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = PERCENTAGE
+
 
     @property
     def icon(self):
@@ -608,7 +614,7 @@ class WlanthermoSystemSocSensor(CoordinatorEntity, SensorEntity):
         return None
     
     @property
-    def state(self):
+    def native_value(self):
         system = getattr(self.coordinator.data, 'system', None)
         return getattr(system, 'soc', None) if system else None
 
@@ -624,14 +630,14 @@ class WlanthermoSystemSocSensor(CoordinatorEntity, SensorEntity):
             return False
         return True
     
-class WlanthermoSystemChargeSensor(CoordinatorEntity, SensorEntity):
+class WlanthermoSystemChargeSensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator, sys, device_name):
         super().__init__(coordinator)
         self._attr_has_entity_name = True
         self._attr_translation_key = "battery_charging"
         self._attr_unique_id = f"{device_name}_system_charge"
-        self.entity_id = f"sensor.{device_name}_system_charge"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property
     def icon(self):
@@ -645,14 +651,15 @@ class WlanthermoSystemChargeSensor(CoordinatorEntity, SensorEntity):
             return hass.data[DOMAIN][entry_id]["device_info"]
         return None
     
-    @property
-    def state(self):
-        """
-        Return the current battery charging state from the system object.
-        Always fetches the latest value from coordinator.data.system.
-        """
-        system = getattr(self.coordinator.data, 'system', None)
-        return getattr(system, 'charge', None) if system else None
+    @property 
+    def is_on(self):
+         """ 
+         Return True if the battery is charging.
+         """
+         system = getattr(self.coordinator.data, "system", None)
+         if not system: 
+             return None # system.charge sollte True/False liefern
+         return bool(getattr(system, "charge", False))
 
     @property
     def available(self):
@@ -671,8 +678,11 @@ class WlanthermoSystemRssiSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._attr_name = "Wlan RSSI"
         self._attr_unique_id = f"{device_name}_system_rssi"
-        self.entity_id = f"sensor.{device_name}_system_rssi"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement ="dBm"
+
 
     @property
     def icon(self):
@@ -687,7 +697,7 @@ class WlanthermoSystemRssiSensor(CoordinatorEntity, SensorEntity):
             return None
     
     @property
-    def state(self):
+    def native_value(self):
         """
         Return the current WLAN RSSI value from the system object.
         """
@@ -718,8 +728,9 @@ class WlanthermoSystemOnlineSensor(CoordinatorEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "cloud_status"
         self._attr_unique_id = f"{device_name}_system_online"
-        self.entity_id = f"sensor.{device_name}_system_online"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_device_class = SensorDeviceClass.ENUM
+        self._attr_options = ["not_connected", "standby", "connected"]
 
     async def async_added_to_hass(self):
         await self._async_load_translations()
@@ -760,20 +771,23 @@ class WlanthermoSystemOnlineSensor(CoordinatorEntity, SensorEntity):
         return hass.data[DOMAIN][entry_id]["device_info"]
 
     @property
-    def state(self):
+    def native_value(self) -> str | None:
         if not self.available:
-            return "Not connected"
+            return "not_connected"
+
         system = self._sys
         value = getattr(system, "online", None) if system else None
 
-        default_map = {
-            "0": "Not connected",
-            "1": "Standby",
-            "2": "Connected",
+        map_value = {
+            0: "not_connected",
+            1: "standby",
+            2: "connected",
         }
 
-        online_map = self._translations.get("system_online", default_map)
-        return online_map.get(str(value), str(value))
+        try:
+            return map_value.get(int(value))
+        except (TypeError, ValueError):
+            return None
 
     @property
     def available(self):
@@ -798,7 +812,6 @@ class WlanthermoDeviceInfoSensor(CoordinatorEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "device_info"
         self._attr_unique_id = f"{device_name}_device_info"
-        self.entity_id = f"sensor.{device_name}_device_info"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def _handle_coordinator_update(self):
@@ -831,7 +844,7 @@ class WlanthermoDeviceInfoSensor(CoordinatorEntity, SensorEntity):
             return None
     
     @property
-    def state(self):
+    def native_value(self) -> str | None:
         """
         Return the device name from the device info object.
         """
@@ -868,7 +881,6 @@ class WlanthermoSystemInfoSensor(CoordinatorEntity, SensorEntity):
         self._system = system
         self._attr_name = "System Info"
         self._attr_unique_id = f"{device_name}_system_info"
-        self.entity_id = f"sensor.{device_name}_system_info"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def _handle_coordinator_update(self):
@@ -902,7 +914,7 @@ class WlanthermoSystemInfoSensor(CoordinatorEntity, SensorEntity):
         return None
     
     @property
-    def state(self):
+    def native_value(self) -> str | None:
         """
         Return the system unit (e.g., temperature unit) from the system info object.
         """
@@ -932,14 +944,13 @@ class WlanthermoSystemInfoSensor(CoordinatorEntity, SensorEntity):
 class WlanthermoIotInfoSensor(CoordinatorEntity, SensorEntity):
     """
     Sensor entity for IoT/cloud information (from /settings.iot endpoint).
-    Reports cloud URL and related details.
+    Reports first part for cloud URL.
     """
     def __init__(self, coordinator, iot, device_name):
         super().__init__(coordinator)
         self._iot = iot
         self._attr_name = "Cloud URL"
         self._attr_unique_id = f"{device_name}_cloud_url"
-        self.entity_id = f"sensor.{device_name}_cloud_url"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def _handle_coordinator_update(self):
@@ -950,7 +961,7 @@ class WlanthermoIotInfoSensor(CoordinatorEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def state(self):
+    def native_value(self) -> str | None:
         """
         Return the cloud URL from the IoT info object.
         """
@@ -993,7 +1004,6 @@ class WlanthermoChannelSensor(CoordinatorEntity, SensorEntity):
         self._channel_number = channel.number
         self._device_name = device_name
         self._attr_unique_id = f"{device_name}_channel_{channel.number}"
-        self.entity_id = f"sensor.{device_name}_channel_{channel.number}"
 
     def _get_channel(self):
         """
@@ -1017,7 +1027,7 @@ class WlanthermoChannelSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self) -> float | None:
         """
         Return the current temperature value for this channel.
         """
@@ -1077,7 +1087,6 @@ class WlanthermoPitmasterSensor(CoordinatorEntity, SensorEntity):
         self._device_name = device_name
         self._attr_name = f"Pitmaster {idx}"
         self._attr_unique_id = f"{device_name}_pitmaster_{idx}"
-        self.entity_id = f"sensor.{device_name}_pitmaster_{idx}"
 
     @property
     def device_info(self):
@@ -1091,7 +1100,7 @@ class WlanthermoPitmasterSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self) -> float | None:
         """
         Return the current pitmaster value.
         """
@@ -1125,9 +1134,8 @@ class WlanthermoPitmasterValueSensor(CoordinatorEntity, SensorEntity):
         self._attr_translation_placeholders = {"pitmaster_id": str(pitmaster.id)}
         safe_device_name = device_name.replace(" ", "_").lower()
         self._attr_unique_id = f"{safe_device_name}_pitmaster_{pitmaster.id}_value"
-        self.entity_id = f"sensor.{safe_device_name}_pitmaster_{pitmaster.id}_value"
         self._attr_icon = "mdi:fan"
-        self._attr_native_unit_of_measurement = "%"
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
     def _get_pitmaster(self):
         """
@@ -1151,7 +1159,7 @@ class WlanthermoPitmasterValueSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self) -> float | None:
         """
         Return the current value for this pitmaster, or None if not found.
         """
@@ -1168,7 +1176,6 @@ class WlanthermoPitmasterTemperatureSensor(CoordinatorEntity, SensorEntity):
         self._pitmaster_id = pitmaster.id
         self._attr_name = f"Pitmaster {pitmaster.id} Temperature"
         self._attr_unique_id = f"{device_name}_pitmaster_{pitmaster.id}_temperature"
-        self.entity_id = f"sensor.{device_name}_pitmaster_{pitmaster.id}_temperature"
         self._attr_icon = "mdi:thermometer"
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -1218,6 +1225,7 @@ class WlanthermoPitmasterTemperatureSensor(CoordinatorEntity, SensorEntity):
             return None
 
         return temp
+    
 
     @property
     def available(self):
