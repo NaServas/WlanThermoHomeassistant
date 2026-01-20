@@ -91,65 +91,66 @@ button_card_templates:
         - grid-area: i
         - align-self: center
     tap_action:
-      action: call-service
-      service: browser_mod.popup
-      data:
-        title: |
-          [[[
-            const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-            return "Kanal " + id;
-          ]]]
-        content:
-          type: entities
-          entities:
-            - |
-              [[[
-                const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `sensor.${dev}_channel_${id}_temperatur`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `sensor.${dev}_channel_${id}_timeleft`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `text.${dev}_channel_${id}_name`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `number.${dev}_channel_${id}_min`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `number.${dev}_channel_${id}_max`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `select.${dev}_channel_${id}_alarm`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `light.${dev}_channel_${id}_color`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `select.${dev}_channel_${id}_typ`;
-              ]]]
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: |
+            [[[
+              const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+              return "Kanal " + id;
+            ]]]
+          content:
+            type: entities
+            entities:
+              - |
+                [[[
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `sensor.${dev}_channel_${id}_temperatur`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `sensor.${dev}_channel_${id}_timeleft`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `text.${dev}_channel_${id}_name`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `number.${dev}_channel_${id}_min`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `number.${dev}_channel_${id}_max`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `select.${dev}_channel_${id}_alarm`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `light.${dev}_channel_${id}_color`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `select.${dev}_channel_${id}_typ`;
+                ]]]
   wlt_pitmaster_button:
     show_icon: true
     show_name: true
@@ -228,47 +229,48 @@ button_card_templates:
         - grid-area: i
         - align-self: center
     tap_action:
-      action: call-service
-      service: browser_mod.popup
-      data:
-        title: |
-          [[[
-            const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
-            return "Pitmaster " + id;
-          ]]]
-        content:
-          type: entities
-          entities:
-            - |
-              [[[
-                const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `number.${dev}_pitmaster_${id}_value`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `number.${dev}_pitmaster_${id}_set`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `select.${dev}_pitmaster_${id}_channel`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `select.${dev}_pitmaster_${id}_pid`;
-              ]]]
-            - |
-              [[[
-                const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
-                const dev = variables.device_name;
-                return `select.${dev}_pitmaster_${id}_typ`;
-              ]]]
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: |
+            [[[
+              const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
+              return "Pitmaster " + id;
+            ]]]
+          content:
+            type: entities
+            entities:
+              - |
+                [[[
+                  const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `number.${dev}_pitmaster_${id}_value`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `number.${dev}_pitmaster_${id}_set`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `select.${dev}_pitmaster_${id}_channel`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `select.${dev}_pitmaster_${id}_pid`;
+                ]]]
+              - |
+                [[[
+                  const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
+                  const dev = variables.device_name;
+                  return `select.${dev}_pitmaster_${id}_typ`;
+                ]]]
 views:
   - title: WLANThermo
     path: wlanthermo
