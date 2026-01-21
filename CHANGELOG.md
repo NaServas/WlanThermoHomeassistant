@@ -1,6 +1,19 @@
 
 # Changelog
 
+## [0.2.0] - 2026-01-21
+
+### Changed
+- Complete rewrite of the DataUpdateCoordinator and entity handling for improved performance, maintainability and reliability.
+- Major refactor of all sensor, binary_sensor, and entity classes for clarity and extensibility.
+- Adjusted and improved translation files and translation keys for better multi-language support.
+- Updated and streamlined `__init__.py` and `config_flow.py` for a more robust integration setup and configuration experience.
+- Improved dashboard YAML and entity naming to match new structure and translation logic.
+- Numerous bugfixes and code cleanups throughout the integration.
+
+### Removed
+- Legacy entity and coordinator logic, replaced by new architecture.
+
 ## [0.1.4] - 2026-01-16
 
 ### Added
