@@ -199,13 +199,9 @@ class WlanthermoPitmasterNumber(CoordinatorEntity, NumberEntity):
         """
         Set the value for this pitmaster field and update via API.
         """
-        import logging
-        _LOGGER = logging.getLogger(__name__)
         pitmaster = self._get_pitmaster()
         if not pitmaster:
-            _LOGGER.error(f"[WLANThermo] PitmasterNumber: Pitmaster {self._pitmaster_id} not found for set_native_value")
             return
-        #_LOGGER.warning(f"[WLANThermo] PitmasterNumber: Setting {self._field['key']} for pitmaster {pitmaster.id} to {value}")
         pitmaster_data = {
             "id": pitmaster.id,
             "channel": pitmaster.channel,
@@ -214,9 +210,7 @@ class WlanthermoPitmasterNumber(CoordinatorEntity, NumberEntity):
             "set": value if self._field["key"] == "set" else pitmaster.set,
             "typ": pitmaster.typ,
         }
-        #_LOGGER.warning(f"[WLANThermo] PitmasterNumber: Sending to API: {pitmaster_data}")
         result = await self._api.async_set_pitmaster(pitmaster_data)
-        #_LOGGER.warning(f"[WLANThermo] PitmasterNumber: API result: {result}")
         await self.coordinator.async_request_refresh()
 
     @property

@@ -24,16 +24,12 @@ from homeassistant.const import (
     UnitOfTime,
 )
 
-
 from homeassistant.core import callback
 from .const import DOMAIN
 from datetime import timedelta, datetime
 from .data import WlanthermoData
 import logging
 import collections
-
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """
@@ -688,10 +684,6 @@ class WlanthermoCloudOnlineSensor(CoordinatorEntity, SensorEntity):
             return None
 
         value = getattr(system, "online", None)
-        _LOGGER.error(
-            "[WLANThermo] system.online=%s",
-            value,
-        )
         try:
             return {
                 0: "not_connected",

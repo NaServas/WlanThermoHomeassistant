@@ -9,6 +9,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import logging
 
+_LOGGER = logging.getLogger(__name__)
+
 class WLANThermoApi:
     """
     Asynchronous API client for WLANThermo device.
@@ -28,7 +30,6 @@ class WLANThermoApi:
         self._base_url = f"http://{host}:{port}{self._path_prefix}"
 
     async def _get(self, endpoint):
-        _LOGGER = logging.getLogger(__name__)
         url = f"{self._base_url}{endpoint}"
 
         session = async_get_clientsession(self._hass)
@@ -83,7 +84,6 @@ class WLANThermoApi:
                     text = await resp.text()
                     return resp.status == 200 and text.strip().lower() == "true"
         except Exception as err:
-            _LOGGER = logging.getLogger(__name__)
             _LOGGER.debug("set_channel failed: %s", err)
             return False
 
@@ -109,6 +109,5 @@ class WLANThermoApi:
                     text = await resp.text()
                     return resp.status == 200 and text.strip().lower() == "true"
         except Exception as err:
-            _LOGGER = logging.getLogger(__name__)
             _LOGGER.debug("set_pitmaster failed: %s", err)
             return False
