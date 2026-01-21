@@ -396,18 +396,18 @@ views:
                               padding: 8px;
                               background-color:
                                 {% set v = states('sensor.wlanthermo_cloud_status') %}
-                                {% if v == 'Verbunden' or v == 'Connected' %}
+                                {% if v == 'verbunden' or v == 'connected' %}
                                   rgba(0,200,0,0.3)
-                                {% elif v == 'Standby' %}
+                                {% elif v == 'standby' %}
                                   rgba(255,200,0,0.3)
                                 {% else %}
                                   rgba(200,0,0,0.3)
                                 {% endif %};
                             }
                       - type: custom:mushroom-entity-card
-                        entity: sensor.wlanthermo_temperatureinheit
-                        name: Einheit
-                        icon: mdi:scale
+                        entity: sensor.wlanthermo_system_info
+                        name: System Info
+                        icon: mdi:cog-outline
                         card_mod:
                           style: |
                             ha-card {
@@ -424,11 +424,16 @@ views:
                               border-radius: 12px;
                               padding: 8px;
                               background-color:
-                                {% set v = states('sensor.wlanthermo_ladevorgang_batterie') %}
-                                {% if v in ['true','on','online','connected','True','1'] %}
-                                  rgba(0,200,0,0.3)
+                                {% set charging = states('sensor.wlanthermo_ladevorgang_batterie') %}
+                                {% set soc = states('sensor.wlanthermo_batteriestand') | int(0) %}
+                                {% if charging in ['true','on','online','connected','True','1'] %}
+                                  rgba(0,200,0,0.3)     /* charging */
+                                {% elif charging in ['false','off','False','0'] and soc == 100 %}
+                                  rgba(0,150,255,0.3)   /* plugged, full */
+                                {% elif charging in ['false','off','False','0'] %}
+                                  rgba(200,200,0,0.3)   /* battery */
                                 {% else %}
-                                  rgba(200,200,0,0.3)
+                                  rgba(150,150,150,0.3)
                                 {% endif %};
                             }
                       - type: custom:mushroom-entity-card
@@ -460,7 +465,7 @@ views:
                             }
                       - type: custom:mushroom-entity-card
                         entity: sensor.wlanthermo_gerate_info
-                        name: Gerät
+                        name: Geräte Info
                         icon: mdi:devices
                         card_mod:
                           style: |
