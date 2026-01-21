@@ -25,28 +25,26 @@ CHANNEL_SELECT_FIELDS = [
     },
 ]
 
+PITMASTER_MODES = ["off", "manual", "auto"]
 PITMASTER_SELECT_FIELDS = [
-    # Defines which pitmaster fields are exposed as select entities
     {
         "key": "typ",
-        "name": "Pitmaster State",
         "icon": "mdi:state-machine",
-        "options": ["off", "manual", "auto"],
+        "options": PITMASTER_MODES,
     },
     {
         "key": "pid",
-        "name": "PID Profile",
         "icon": "mdi:chart-bell-curve",
-        # TODO: Populate options from device/settings
-        "options": [0, 1, 2, 3, 4, 5],
+        # wird dynamisch überschrieben
+        "options": [],
     },
 ]
 PITMASTER_STATE_MAP = {
-    "off": 0,
-    "manual": 1,
-    "auto": 2,
+    "off": "off",
+    "manual": "manual",
+    "auto": "auto",
 }
-PITMASTER_STATE_MAP_INV = {v: k for k, v in PITMASTER_STATE_MAP.items()}
+PITMASTER_STATE_MAP_INV = PITMASTER_STATE_MAP  # 1:1 Mapping
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """
@@ -201,7 +199,6 @@ class WlanthermoChannelSelect(CoordinatorEntity, SelectEntity):
 
         self._attr_icon = field["icon"]
         self._attr_options = field["options"]
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_info = entry_data["device_info"]
 
         self._probe_type_key = field.get("key") == "typ"
@@ -287,11 +284,30 @@ class WlanthermoPitmasterSelect(CoordinatorEntity, SelectEntity):
     Select entity for a pitmaster's state, PID profile, or channel.
     Allows user to select pitmaster state, PID profile, or channel for each pitmaster.
     """
-    def __init__(self, coordinator, pitmaster, field, entry_data, pid_profiles=None, channel_options=None, channel_number_by_name=None, channel_name_map=None):
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator,
+        pitmaster,
+        field,
+        entry_data,
+        *,
+        pid_profiles=None,
+        channel_options=None,
+        channel_number_by_name=None,
+        channel_name_map=None,
+    ):
         super().__init__(coordinator)
+
         self._pitmaster_id = pitmaster.id
         self._field = field
-        self._attr_has_entity_name = True
+
+        self._pid_profiles = pid_profiles or []
+        self._channel_options = channel_options or []
+        self._channel_number_by_name = channel_number_by_name or {}
+        self._channel_name_map = channel_name_map or {}
+
         self._attr_translation_key = f"pitmaster_{field['key']}"
         self._attr_translation_placeholders = {
             "pitmaster_number": str(pitmaster.id + 1)
@@ -304,45 +320,51 @@ class WlanthermoPitmasterSelect(CoordinatorEntity, SelectEntity):
 
         self._attr_icon = field["icon"]
         self._attr_options = field["options"]
-        self._pid_profiles = pid_profiles if pid_profiles is not None else []
-        self._channel_options = channel_options if channel_options is not None else []
-        self._channel_number_by_name = channel_number_by_name if channel_number_by_name is not None else {}
-        self._channel_name_map = channel_name_map if channel_name_map is not None else {}
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_info = entry_data["device_info"]
 
     def _get_pitmaster(self):
         """
         Helper to get the current pitmaster object from the coordinator data.
         """
-        pitmasters = getattr(self.coordinator.data, 'pitmasters', [])
-        for pm in pitmasters:
+        for pm in getattr(self.coordinator.data, "pitmasters", []):
             if pm.id == self._pitmaster_id:
                 return pm
         return None
-    
-    def _handle_coordinator_update(self):
+
+    @property
+    def current_option(self):
+        pitmaster = self._get_pitmaster()
+        if not pitmaster:
+            return None
+
+        if self._field["key"] == "typ":
+            return pitmaster.typ
+
+        if self._field["key"] == "pid":
+            for p in self._pid_profiles:
+                if p.id == pitmaster.pid:
+                    return p.name
+
         if self._field["key"] == "channel":
-            channels = getattr(self.coordinator.data, "channels", [])
+            for ch in getattr(self.coordinator.data, "channels", []):
+                if ch.number == pitmaster.channel:
+                    return ch.name
+        return None
 
-            self._attr_options = [ch.name for ch in channels]
-            self._channel_name_map = {ch.number: ch.name for ch in channels}
-            self._channel_number_by_name = {ch.name: ch.number for ch in channels}
-
-        super()._handle_coordinator_update()
-
-    async def async_select_option(self, option):
+    async def async_select_option(self, option: str):
         """
         Handle user selecting an option for this pitmaster field.
         Updates the pitmaster via the API and refreshes coordinator data.
         """
-        api = self.coordinator.hass.data[DOMAIN][self.coordinator.config_entry.entry_id]["api"]
         pitmaster = self._get_pitmaster()
         if not pitmaster:
-            import logging
-            logging.getLogger(__name__).error(f"[WLANThermo] PitmasterSelect: Pitmaster {self._pitmaster_id} not found for select_option")
             return
-        pitmaster_data = {
+
+        api = self.coordinator.hass.data[DOMAIN][
+            self.coordinator.config_entry.entry_id
+        ]["api"]
+
+        data = {
             "id": pitmaster.id,
             "channel": pitmaster.channel,
             "pid": pitmaster.pid,
@@ -350,38 +372,22 @@ class WlanthermoPitmasterSelect(CoordinatorEntity, SelectEntity):
             "set": pitmaster.set,
             "typ": pitmaster.typ,
         }
+
         if self._field["key"] == "typ":
-            pitmaster_data["typ"] = PITMASTER_STATE_MAP.get(option)
-        elif self._field["key"] == "pid" and self._pid_profiles:
+            data["typ"] = option
+
+        elif self._field["key"] == "pid":
             for p in self._pid_profiles:
-                if hasattr(p, "name") and p.name == option:
-                    pitmaster_data["pid"] = p.id
+                if p.name == option:
+                    data["pid"] = p.id
                     break
-        elif self._field["key"] == "channel" and self._channel_number_by_name:
-            channel_number = self._channel_number_by_name.get(option)
-            if channel_number is not None:
-                pitmaster_data["channel"] = channel_number
-        await api.async_set_pitmaster(pitmaster_data)
+
+        elif self._field["key"] == "channel":
+            for ch in getattr(self.coordinator.data, "channels", []):
+                if ch.name == option:
+                    data["channel"] = ch.number
+                    break
+
+        await api.async_set_pitmaster(data)
         await self.coordinator.async_request_refresh()
-
-    @property
-    def current_option(self):
-        """
-        Return the currently selected option for this pitmaster field.
-        """
-        pitmaster = self._get_pitmaster()
-        if not pitmaster:
-            return None
-
-        if self._field["key"] == "typ":
-            return PITMASTER_STATE_MAP_INV.get(pitmaster.typ)
-
-
-        if self._field["key"] == "channel":
-            return self._channel_name_map.get(pitmaster.channel)
-
-        if self._field["key"] == "pid":
-            for p in self._pid_profiles:
-                if p.id == pitmaster.pid:
-                    return p.name
 

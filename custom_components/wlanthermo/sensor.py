@@ -113,8 +113,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if new_entities:
             async_add_entities(new_entities)
 
-    await _async_discover_entities()
     coordinator.async_add_listener(_async_discover_entities)
+    await _async_discover_entities()
 
 
 class WlanthermoChannelTemperatureSensor(CoordinatorEntity, SensorEntity):
@@ -415,8 +415,10 @@ class WlanthermoCloudLinkSensor(CoordinatorEntity, SensorEntity):
     Sensor entity for the cloud link (from /settings.iot).
     """
 
-    _attr_name = "Cloud Link"
+    _attr_has_entity_name = True
+    _attr_translation_key = "cloud_url"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:cloud-outline"
 
     def __init__(self, coordinator, entry_data):
         super().__init__(coordinator)
@@ -675,7 +677,10 @@ class WlanthermoCloudOnlineSensor(CoordinatorEntity, SensorEntity):
             return None
 
         value = getattr(system, "online", None)
-
+        _LOGGER.error(
+            "[WLANThermo] system.online=%s",
+            value,
+        )
         try:
             return {
                 0: "not_connected",
@@ -986,7 +991,7 @@ class WlanthermoPitmasterValueSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._pitmaster_id = pitmaster.id
         self._attr_translation_placeholders = {
-            "pitmaster_id": str(pitmaster.id)
+            "pitmaster_number": str(pitmaster.id + 1)
         }
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_pitmaster_{pitmaster.id}_value"
@@ -1026,7 +1031,7 @@ class WlanthermoPitmasterTemperatureSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._pitmaster_id = pitmaster.id
         self._attr_translation_placeholders = {
-            "pitmaster_id": str(pitmaster.id)
+            "pitmaster_number": str(pitmaster.id +1)
         }
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_pitmaster_{pitmaster.id}_temperature"

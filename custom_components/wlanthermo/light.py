@@ -60,9 +60,12 @@ class WlanthermoChannelColorLight(CoordinatorEntity, LightEntity):
         self._channel_number = channel.number
         self._api = entry_data["api"]
 
-        self._attr_name = f"Channel {channel.number} Color"
+        self._attr_translation_key = "channel_color"
+        self._attr_translation_placeholders = {
+            "channel_number": str(channel.number)
+        }
         self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_channel_{channel.number}_color"
+            f"{coordinator.config_entry.entry_id}_channel_{channel.number}_color_rgb"
         )
         self._attr_device_info = entry_data["device_info"]
 

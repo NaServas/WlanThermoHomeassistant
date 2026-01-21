@@ -111,7 +111,6 @@ class WlanthermoChannelNumber(CoordinatorEntity, NumberEntity):
         self._attr_native_max_value = field["max"]
         self._attr_native_step = field["step"]
         self._attr_native_unit_of_measurement = field["unit"]
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_info = entry_data["device_info"]
 
 
@@ -183,7 +182,6 @@ class WlanthermoPitmasterNumber(CoordinatorEntity, NumberEntity):
         self._attr_native_max_value = field["max"]
         self._attr_native_step = field["step"]
         self._attr_native_unit_of_measurement = field["unit"]
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_info = entry_data["device_info"]
 
 

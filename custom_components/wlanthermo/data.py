@@ -47,7 +47,7 @@ class SystemInfo:
         self.soc: Optional[int] = int(data["soc"]) if "soc" in data else None  # State of charge
         self.charge: Optional[bool] = bool(data["charge"]) if "charge" in data else None  # Charging status
         self.rssi: int = int(data.get("rssi", 0))  # WiFi signal
-        self.online: bool = bool(data.get("online", False))
+        self.online: Optional[int] = int(data["online"]) if "online" in data else None
 
 class Channel:
     """
