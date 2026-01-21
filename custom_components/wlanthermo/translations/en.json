@@ -50,6 +50,7 @@
       "battery_level": { "name": "Battery Level" },
       "temperature_unit": { "name": "Temperature Unit" },
       "cloud_url": {"name": "Cloud URL"},
+      "cloud_link": {"name": "Cloud Link"},
       "cloud_status": {
         "name": "Cloud Status",
         "state": {
@@ -57,6 +58,16 @@
           "standby": "Standby",
           "connected": "Connected"
         }
+      },
+      "system_status": {
+        "name": "System Status",
+        "state": {
+          "offline": "Offline",
+          "online": "Online"
+        }
+      },
+      "system_update": {
+        "name": "System Update available"
       },
       "channel": { "name": "Channel" },
       "channel_temperature": { "name": "Channel {channel_number} Temperature" },

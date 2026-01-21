@@ -361,6 +361,7 @@ class WlanthermoSystemGetUpdateSensor(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "system_update"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:cellphone-arrow-down"
 
     def __init__(self, coordinator, entry_data):
         super().__init__(coordinator)
@@ -416,9 +417,9 @@ class WlanthermoCloudLinkSensor(CoordinatorEntity, SensorEntity):
     """
 
     _attr_has_entity_name = True
-    _attr_translation_key = "cloud_url"
+    _attr_translation_key = "cloud_link"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:cloud-outline"
+    _attr_icon = "mdi:link"
 
     def __init__(self, coordinator, entry_data):
         super().__init__(coordinator)
@@ -612,6 +613,16 @@ class WlanthermoSystemChargeSensor(CoordinatorEntity, BinarySensorEntity):
         return bool(charge)
 
     @property
+    def icon(self) -> str:
+        if self.is_on is None:
+            return "mdi:battery-unknown"
+        return (
+            "mdi:battery-charging"
+            if self.is_on
+            else "mdi:battery-medium"
+        )
+    
+    @property
     def available(self) -> bool:
         return self.coordinator.last_update_success
 
@@ -690,6 +701,21 @@ class WlanthermoCloudOnlineSensor(CoordinatorEntity, SensorEntity):
         except (TypeError, ValueError):
             return None
 
+    @property
+    def icon(self) -> str:
+        """
+        Dynamic icon based on cloud connection state.
+        """
+        match self.native_value:
+            case "connected":
+                return "mdi:cloud-check-variant-outline"
+            case "standby":
+                return "mdi:cloud-outline"
+            case "not_connected":
+                return "mdi:cloud-off"
+            case _:
+                return "mdi:cloud-question-outline"
+            
     @property
     def available(self) -> bool:
         return self.coordinator.last_update_success
@@ -818,9 +844,8 @@ class WlanthermoIotInfoSensor(CoordinatorEntity, SensorEntity):
     Diagnostic sensor exposing IoT / cloud information
     from /settings.iot.
     """
-
     _attr_has_entity_name = True
-    _attr_name = "Cloud URL"
+    _attr_translation_key = "cloud_url"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:cloud-outline"
 
