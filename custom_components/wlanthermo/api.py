@@ -7,6 +7,7 @@ Handles data retrieval and configuration updates for channels and pitmasters.
 import async_timeout
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from aiohttp import BasicAuth
 import logging
 
 class WLANThermoApi:
@@ -14,6 +15,7 @@ class WLANThermoApi:
     Asynchronous API client for WLANThermo device.
     Handles HTTP communication for data and configuration endpoints.
     """
+    _LOGGER = logging.getLogger(__name__)
     def __init__(self, hass, host, port=80, path_prefix="/"):
         """
         Initialize the API client.
@@ -25,30 +27,36 @@ class WLANThermoApi:
         self._host = host
         self._port = port
         self._path_prefix = path_prefix.rstrip("/")
+        self._auth = None
         self._base_url = f"http://{host}:{port}{self._path_prefix}"
+        
+
+    def set_auth(self, username: str, password: str):
+        if username and password:
+            self._auth = BasicAuth(username, password)
+        else:
+            self._auth = None
 
     async def _get(self, endpoint):
-        _LOGGER = logging.getLogger(__name__)
         url = f"{self._base_url}{endpoint}"
 
         session = async_get_clientsession(self._hass)
 
         try:
             async with async_timeout.timeout(10):
-                async with session.get(url, allow_redirects=True) as resp:
+                async with session.get(url, allow_redirects=True, auth=self._auth) as resp:
                     if resp.status != 200:
-                        _LOGGER.error(f"WLANThermoApi: result {url}: {resp.status} <-1")
                         return None
 
                     try:
                         data = await resp.json()
                         return data
                     except Exception as json_err:
-                        _LOGGER.error(f"WLANThermoApi: JSON decode error for {url}: {json_err} <-2")
+                        self._LOGGER.warning(f"WLANThermoApi: JSON decode error for {url}: {json_err} <-2")
                         return None
 
         except Exception as err:
-            _LOGGER.error(f"WLANThermoApi: Error fetching {url}: {err} <-3")
+            self._LOGGER.warning(f"WLANThermoApi: Error fetching {url}: {err} <-3")
             return None
 
 
@@ -69,24 +77,31 @@ class WLANThermoApi:
         """
         return await self._get("/info")
 
+    async def _request(self, method, endpoint, json=None):
+        session = async_get_clientsession(self._hass)
+        url = f"{self._base_url}{endpoint}"
+
+        try:
+            async with async_timeout.timeout(10):
+                req = getattr(session, method.lower())
+                async with req(
+                    url,
+                    json=json,
+                    auth=self._auth,
+                    headers={"Content-Type": "application/json"},
+                ) as resp:
+                    text = await resp.text()
+                    return resp.status, text
+        except Exception as err:
+            self._LOGGER.warning("%s failed: %s", endpoint, err)
+            return None, None
+
     async def async_set_channel(self, channel_data: dict, method: str = "POST") -> bool:
         """
         Send channel configuration to the device.
         """
-        session = async_get_clientsession(self._hass)
-        url = f"{self._base_url}/setchannels"
-        headers = {"Content-Type": "application/json"}
-
-        try:
-            async with async_timeout.timeout(10):
-                request = getattr(session, method.lower())
-                async with request(url, json=channel_data, headers=headers) as resp:
-                    text = await resp.text()
-                    return resp.status == 200 and text.strip().lower() == "true"
-        except Exception as err:
-            _LOGGER = logging.getLogger(__name__)
-            _LOGGER.debug("set_channel failed: %s", err)
-            return False
+        status, text = await self._request(method, "/setchannels", channel_data)
+        return status == 200 and text and text.strip().lower() == "true"
 
 
     async def async_set_pitmaster(self, pitmaster_data: dict, method: str = "POST") -> bool:
@@ -96,20 +111,6 @@ class WLANThermoApi:
         :param method: HTTP method ('POST' or 'PUT')
         :return: True if successful, False otherwise
         """
-        session = async_get_clientsession(self._hass)
-        url = f"{self._base_url}/setpitmaster"
-        headers = {"Content-Type": "application/json"}
-        # Add authentication if needed (e.g., token)
-        # headers["Authorization"] = f"Bearer {self._token}"
-        try:
-            async with async_timeout.timeout(10):
-                # Select HTTP method dynamically
-                req = getattr(session, method.lower())
-                # The API expects a list of pitmaster objects
-                async with req(url, json=[pitmaster_data], headers=headers) as resp:
-                    text = await resp.text()
-                    return resp.status == 200 and text.strip().lower() == "true"
-        except Exception as err:
-            _LOGGER = logging.getLogger(__name__)
-            _LOGGER.debug("set_pitmaster failed: %s", err)
-            return False
+        status, text = await self._request(method, "/setpitmaster", [pitmaster_data])
+        return status == 200 and text and text.strip().lower() == "true"
+        

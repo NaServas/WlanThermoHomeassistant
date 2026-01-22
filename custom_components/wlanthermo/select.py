@@ -204,6 +204,8 @@ class WlanthermoChannelSelect(CoordinatorEntity, SelectEntity):
         value = option
         if self._field["key"] == "alarm":
             value = self._attr_options.index(option)
+        elif self._field["key"] == "typ":
+            value = self._field["sensor_type_map"][option]
 
         channel_data = {
             "number": channel.number,

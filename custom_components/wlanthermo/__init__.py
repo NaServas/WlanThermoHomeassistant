@@ -1,5 +1,5 @@
 """
-Home Assistant integration for WLANThermodevices.
+Home Assistant integration for WLANThermo devices.
 Handles setup, teardown, and data coordination for the integration.
 """
 
@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, CONF_MODEL
+from .const import DOMAIN
 from .api import WLANThermoApi
 from .data import WlanthermoData, SettingsData
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -28,10 +28,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 	# Retrieve connection and configuration options
 	host = entry.options.get("host", entry.data.get("host"))
 	port = entry.options.get("port", entry.data.get("port", 80))
-	path_prefix = entry.data.get("path_prefix", "/")
-	scan_interval = entry.options.get("scan_interval", 10)
+	path_prefix = entry.options.get("path_prefix",entry.data.get("path_prefix", "/"))
+	scan_interval = entry.options.get("scan_interval", entry.data.get("scan_interval", 10))
 
 	api = WLANThermoApi(hass, host, port, path_prefix)
+	auth_required = entry.options.get("auth_required",entry.data.get("auth_required", False))
+
+	if auth_required:
+		api.set_auth(
+			entry.options.get("username", entry.data.get("username")),
+			entry.options.get("password", entry.data.get("password")),
+		)
 
 
 	device_name = entry.data.get("device_name", "WLANThermo")
@@ -40,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 		identifiers={(DOMAIN, entry.entry_id)},
 		name=device_name,
 		manufacturer="WLANThermo",
-		model=entry.data.get(CONF_MODEL, "unknown"),
+		model="unknown",
 	)
 
 	try:
@@ -68,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 				name=device_name,
 				manufacturer="WLANThermo",
 				model=f"{dev.device} {dev.hw_version}".strip(),
-				sw_version=getattr(dev, "sw_version", None),
+				sw_version=dev.sw_version,
 			)
 
 	except Exception as err:
@@ -85,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 	async def async_update_data():
 		"""
 		Fetch both /data and /settings.
-		Do NOT raise UpdateFailed when device is offline.
+		Raise UpdateFailed when device is offline.
 		"""
 		try:
 			raw_data = await api.get_data()
@@ -145,7 +152,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 	else:
 		await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
+	entry.async_on_unload(
+		entry.add_update_listener(async_reload_entry)
+	)
+
 	return True
+	
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    await async_unload_entry(hass, entry)
+    await async_setup_entry(hass, entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -161,4 +176,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 	hass.data[DOMAIN].pop(entry.entry_id, None)
 	return unload_ok
-

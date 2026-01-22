@@ -58,7 +58,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if user_input.get("auth_required"):
+            auth_required = user_input.get("auth_required", False)
+            if auth_required and (
+                "username" not in user_input or "password" not in user_input
+            ):
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=self._schema(user_input),
+                    errors={},
+                )
+            if auth_required:
                 if not user_input.get("username"):
                     errors["username"] = "required"
                 if not user_input.get("password"):
@@ -118,30 +127,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             settings_json = None
 
         if not settings_json:
-            schema = {
-                vol.Required("device_name", default=device_name): str,
-                vol.Required(CONF_HOST, default=host): str,
-                vol.Required(CONF_PORT, default=port): int,
-                vol.Required(CONF_PATH_PREFIX, default=path_prefix): str,
-                vol.Required(
-                    "show_inactive_unavailable",
-                    default=user_input.get("show_inactive_unavailable", True),
-                    description={"translation_key": "show_inactive_unavailable"},
-                ): BooleanSelector({}),
-                vol.Required(
-                    "auth_required",
-                    default=auth_required,
-                    description={"translation_key": "auth_required"},
-                ): BooleanSelector({}),
-            }
-
-            if auth_required:
-                schema[vol.Required("username")] = str
-                schema[vol.Required("password")] = str
-
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=self._schema(user_input),
                 errors={"base": "cannot_connect"},
             )
 
@@ -152,7 +140,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        # 🔥 clean stored data
         clean_data = dict(user_input)
         if not auth_required:
             clean_data.pop("username", None)
@@ -171,7 +158,38 @@ class WLANThermoOptionsFlow(config_entries.OptionsFlow):
     """
     def __init__(self, config_entry):
         self._config_entry = config_entry
+    
+    def _schema(self, user_input=None):
+        user_input = user_input or {}
+        options = self._config_entry.options
+        data = self._config_entry.data
 
+        schema = {
+            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, options.get(CONF_HOST, data.get(CONF_HOST)))): str,
+            vol.Required(CONF_PORT, default=user_input.get(CONF_PORT, options.get(CONF_PORT, data.get(CONF_PORT, 80)))): int,
+            vol.Required(CONF_PATH_PREFIX, default=user_input.get(CONF_PATH_PREFIX, options.get(CONF_PATH_PREFIX, data.get(CONF_PATH_PREFIX, "/")))): str,
+            vol.Required(
+                "scan_interval",
+                default=user_input.get("scan_interval", options.get("scan_interval", 10)),
+            ): int,
+            vol.Required(
+                "show_inactive_unavailable",
+                default=user_input.get("show_inactive_unavailable", options.get("show_inactive_unavailable", True)),
+                description={"translation_key": "show_inactive_unavailable"},
+            ): BooleanSelector({}),
+            vol.Required(
+                "auth_required",
+                default=user_input.get("auth_required", options.get("auth_required", False)),
+                description={"translation_key": "auth_required"},
+            ): BooleanSelector({}),
+        }
+
+        if user_input.get("auth_required") or options.get("auth_required"):
+            schema[vol.Required("username", default=user_input.get("username", options.get("username", "")))] = str
+            schema[vol.Required("password", default=user_input.get("password", options.get("password", "")))] = str
+
+        return vol.Schema(schema)
+    
     async def async_step_init(self, user_input=None):
         """
         First step of the options flow: allow user to update connection and polling options.
@@ -181,7 +199,14 @@ class WLANThermoOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             auth_required = user_input.get("auth_required", False)
-
+            if auth_required and (
+                "username" not in user_input or "password" not in user_input
+            ):
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=self._schema(user_input),
+                    errors={},
+                )
             if auth_required:
                 if not user_input.get("username"):
                     errors["username"] = "required"
@@ -199,44 +224,9 @@ class WLANThermoOptionsFlow(config_entries.OptionsFlow):
                     data=clean,
                 )
 
-        options = self._config_entry.options
-        data = self._config_entry.data
-
-        schema = {
-            vol.Required(
-                CONF_HOST,
-                default=options.get(CONF_HOST, data.get(CONF_HOST)),
-            ): str,
-            vol.Required(
-                CONF_PORT,
-                default=options.get(CONF_PORT, data.get(CONF_PORT, 80)),
-            ): int,
-            vol.Required(
-                CONF_PATH_PREFIX,
-                default=options.get(CONF_PATH_PREFIX, data.get(CONF_PATH_PREFIX, "/")),
-            ): str,
-            vol.Required(
-                "scan_interval",
-                default=options.get("scan_interval", 10),
-            ): int,
-            vol.Required(
-                "show_inactive_unavailable",
-                default=options.get("show_inactive_unavailable", True),
-                description={"translation_key": "show_inactive_unavailable"},
-            ): BooleanSelector({}),
-            vol.Required(
-                "auth_required",
-                default=options.get("auth_required", False),
-                description={"translation_key": "auth_required"},
-            ): BooleanSelector({}),
-        }
-
-        if (user_input and user_input.get("auth_required")) or options.get("auth_required"):
-            schema[vol.Required("username", default=options.get("username", ""))] = str
-            schema[vol.Required("password", default=options.get("password", ""))] = str
-
+        
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema),
+            data_schema=self._schema(user_input),
             errors=errors,
         )

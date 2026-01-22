@@ -14,8 +14,6 @@ MODELS = [
 DOMAIN = "wlanthermo"
 # Config entry key for API path prefix
 CONF_PATH_PREFIX = "path_prefix"
-# Config entry key for device model
-CONF_MODEL = "model"
 
 # Alarm mode constants (used for channel/pitmaster alarms)
 ALARM_OFF = 0           # No alarm
