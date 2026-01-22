@@ -124,10 +124,6 @@ class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
         """
         Set a new name for the channel and update the device via the API.
         """
-        api = self.coordinator.hass.data[DOMAIN][
-            self.coordinator.config_entry.entry_id
-        ]["api"]
-
         channel = self._get_channel()
         if not channel:
             return
@@ -142,5 +138,5 @@ class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
             "color": channel.color,
         }
 
-        await api.async_set_channel(channel_data)
+        await self.coordinator.api.async_set_channel(channel_data)
         await self.coordinator.async_request_refresh()

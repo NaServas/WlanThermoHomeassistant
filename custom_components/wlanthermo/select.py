@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
 
-    settings = getattr(hass.data[DOMAIN][config_entry.entry_id]["api"], 'settings', None)
+    settings = getattr(coordinator.api, 'settings', None)
     sensor_types = []
     sensor_type_map = {}
 
@@ -196,7 +196,6 @@ class WlanthermoChannelSelect(CoordinatorEntity, SelectEntity):
         Handle user selecting an option for this channel field.
         Updates the channel via the API and refreshes coordinator data.
         """
-        api = self.coordinator.hass.data[DOMAIN][self.coordinator.config_entry.entry_id]["api"]
         channel = self._get_channel()
         if not channel:
             _LOGGER.error(f"[WLANThermo] ChannelSelect: Channel {self._channel_number} not found for select_option")
@@ -217,7 +216,7 @@ class WlanthermoChannelSelect(CoordinatorEntity, SelectEntity):
             "color": channel.color,
         }
 
-        await api.async_set_channel(channel_data)
+        await self.coordinator.api.async_set_channel(channel_data)
         await self.coordinator.async_request_refresh()
 
     @property
@@ -324,10 +323,6 @@ class WlanthermoPitmasterSelect(CoordinatorEntity, SelectEntity):
         if not pitmaster:
             return
 
-        api = self.coordinator.hass.data[DOMAIN][
-            self.coordinator.config_entry.entry_id
-        ]["api"]
-
         data = {
             "id": pitmaster.id,
             "channel": pitmaster.channel,
@@ -352,6 +347,6 @@ class WlanthermoPitmasterSelect(CoordinatorEntity, SelectEntity):
                     data["channel"] = ch.number
                     break
 
-        await api.async_set_pitmaster(data)
+        await self.coordinator.api.async_set_pitmaster(data)
         await self.coordinator.async_request_refresh()
 

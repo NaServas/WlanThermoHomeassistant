@@ -58,7 +58,6 @@ class WlanthermoChannelColorLight(CoordinatorEntity, LightEntity):
         super().__init__(coordinator)
 
         self._channel_number = channel.number
-        self._api = entry_data["api"]
 
         self._attr_translation_key = "channel_color"
         self._attr_translation_placeholders = {
@@ -141,7 +140,7 @@ class WlanthermoChannelColorLight(CoordinatorEntity, LightEntity):
             "color": color,
         }
 
-        await self._api.async_set_channel(payload)
+        result = await self.coordinator.api.async_set_channel(payload)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):

@@ -91,9 +91,6 @@ class WlanthermoChannelNumber(CoordinatorEntity, NumberEntity):
         super().__init__(coordinator)
         self._channel_number = channel.number
         self._field = field
-        self._api = coordinator.hass.data[DOMAIN][
-            coordinator.config_entry.entry_id
-        ]["api"]
 
         self._attr_has_entity_name = True
         self._attr_translation_key = f"channel_{field['key']}"
@@ -140,7 +137,7 @@ class WlanthermoChannelNumber(CoordinatorEntity, NumberEntity):
             "color": channel.color,
         }
 
-        await self._api.async_set_channel(channel_data)
+        result = await self.coordinator.api.async_set_channel(channel_data)
         await self.coordinator.async_request_refresh()
 
     @property
@@ -214,9 +211,8 @@ class WlanthermoPitmasterNumber(CoordinatorEntity, NumberEntity):
             "set": value if self._field["key"] == "set" else pitmaster.set,
             "typ": pitmaster.typ,
         }
-        #_LOGGER.warning(f"[WLANThermo] PitmasterNumber: Sending to API: {pitmaster_data}")
-        result = await self._api.async_set_pitmaster(pitmaster_data)
-        #_LOGGER.warning(f"[WLANThermo] PitmasterNumber: API result: {result}")
+        
+        result = await self.coordinator.api.async_set_pitmaster(pitmaster_data)
         await self.coordinator.async_request_refresh()
 
     @property
