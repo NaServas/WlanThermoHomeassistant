@@ -9,6 +9,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from aiohttp import BasicAuth
 import logging
 
+_LOGGER = logging.getLogger(__name__)
+
 class WLANThermoApi:
     """
     Asynchronous API client for WLANThermo device.

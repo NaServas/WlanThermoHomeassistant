@@ -210,13 +210,9 @@ class WlanthermoPitmasterNumber(CoordinatorEntity, NumberEntity):
         """
         Set the value for this pitmaster field and update via API.
         """
-        import logging
-        _LOGGER = logging.getLogger(__name__)
         pitmaster = self._get_pitmaster()
         if not pitmaster:
-            _LOGGER.error(f"[WLANThermo] PitmasterNumber: Pitmaster {self._pitmaster_id} not found for set_native_value")
             return
-        #_LOGGER.warning(f"[WLANThermo] PitmasterNumber: Setting {self._field['key']} for pitmaster {pitmaster.id} to {value}")
         pitmaster_data = {
             "id": pitmaster.id,
             "channel": pitmaster.channel,

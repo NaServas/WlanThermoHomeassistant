@@ -1,20 +1,60 @@
 # WLANThermo – Home Assistant Integration
 
-![Version](https://img.shields.io/badge/version-0.1.4-informational)
+![Version](https://img.shields.io/badge/version-0.2.1-informational)
 ![Lizenz](https://img.shields.io/badge/license-MIT-green)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025%2B-blue)
-[![Support](https://img.shields.io/badge/support-WLANThermo%20Forums-lightgrey)](https://wlanthermo.de/forums/)
+[![Support](https://img.shields.io/badge/support-WLANThermo%20Forum-lightgrey)](https://wlanthermo.de/forums/)
 ![Owner](https://img.shields.io/badge/code%20owner-@MStapelfeldt-purple)
 
-> **Hinweis & Haftungsausschluss**
-> Dies ist eine Community-Integration für WLANThermo.  
-> **Kein Support** durch den Autor. Forks, Weiterentwicklung und Bugfixes sind willkommen. Alle frqagen könnt ihr im [WLANThermo Forum](https://wlanthermo.de/forums/)
- stellen.  
-> **Keine Gewähr/Haftung** – Nutzung auf eigene Gefahr.
+---
 
+## Hinweis & Haftungsausschluss
 
-## Hinweis zur Dashboard-Nutzung
-Um das mitgelieferte Dashboard (wlanthermo.yaml) zu verwenden, müssen folgende Frontend-Karten/Erweiterungen aus HACS installiert werden:
+Dies ist eine **Community-Integration** für WLANThermo Geräte.  
+Es besteht **kein offizieller Support** durch den Autor oder das WLANThermo-Team.
+
+- Forks, Weiterentwicklungen und Bugfixes sind willkommen  
+- Fragen & Diskussionen bitte im  
+  👉 **[WLANThermo Forum](https://wlanthermo.de/forums/)**
+
+⚠️ **Keine Gewähr / Nutzung auf eigene Gefahr**
+
+---
+
+## Übersicht
+
+Diese Integration verbindet Home Assistant mit **WLANThermo Geräten**  
+(ESP32 / Nano / Mini / Link).
+
+Sie liest Sensordaten, Systemstatus und Pitmaster-Informationen aus und stellt diese als native Home-Assistant-Entitäten bereit.
+
+Die Integration ist **vollständig UI-basiert**, YAML ist nicht erforderlich.
+
+---
+
+## Features
+
+- 🔍 Automatische Erkennung & Einrichtung über die HA-Oberfläche
+- 🌡️ Temperatur-Sensoren dynamisch für alle Kanäle (Name & Nummer)
+- 🎛️ Pitmaster-Sensoren dynamisch (Leistung, Temperatur, Modus, PID, Kanal)
+- ⏱️ **Restzeit-Sensor (Time Left)** pro aktivem Kanal
+- ☁️ **Cloud-Sensoren** 
+- 🔋 Systemdiagnose:
+  - WLAN-RSSI
+  - Batteriestand
+  - Ladezustand
+- 🎨 Kanalfarben als **Light-Entitäten**
+- 🌍 Vollständige **Übersetzungsunterstützung (DE / EN)**
+- ⚙️ Konfigurierbares Scan-Intervall
+- 🔌 Offline-toleranter Start (Entitäten erscheinen automatisch)
+- 🔄 Options-Flow für erweiterte Einstellungen
+- 👻 Option: Inaktive Sensoren als *unavailable* anzeigen
+
+---
+
+## Dashboard (optional)
+
+Für das mitgelieferte Beispiel-Dashboard `wlanthermo.yaml` werden folgende Frontend-Erweiterungen benötigt (über **HACS → Frontend**):
 
 - Auto-Entities
 - Button Card
@@ -22,113 +62,140 @@ Um das mitgelieferte Dashboard (wlanthermo.yaml) zu verwenden, müssen folgende 
 - ApexCharts Card
 - Card Mod
 
-Bitte installiere diese über HACS → Frontend, bevor du das Dashboard importierst oder verwendest.
-Das Dashboard ist so dynamisch wie möglich gehalten. Es müssen aber ALLE vorkommen von `wlanthermo` mit dem richtigen Gerätenamen ersetzt werden.
-z.B. `device_name: wlanthermo` → `device_name: nano_v3` oder `entity_id: sensor.wlanthermo_channel_*_temperatur` → `entity_id: sensor.nano_v3_channel_*_temperatur`
+**Wichtig:**  
+Alle Vorkommen von `wlanthermo` müssen auf deinen Gerätenamen angepasst werden.
+Alle Entitätsnamen sind auf deutsch hinterlegt. Bei Englisch müssen diese ersetzt werden.
 
-## Übersicht
-Diese Integration verbindet Home Assistant mit einem WLANThermo (ESP32/Nano/Link/Mini). Sie liest Sensordaten und Pitmaster-Status aus und stellt diese als Entitäten bereit.
+Beispiel:
+```yaml
+device_name: wlanthermo → nano_v3
+sensor.wlanthermo_kanal_*_temperature → sensor.nano_v3_kanal_*_temperature
+sensor.wlanthermo_kanal_*_temperature → sensor.nano_v3_channel_*_temperature
 
-## Features
-- Automatische Erkennung und Einrichtung über die Home Assistant-Oberfläche
-- Temperatur-Sensoren für alle Kanäle (Name & Nummer)
-- Pitmaster-Sensoren (z.B. Duty Cycle)
-- Systeminformationen: RSSI, Batteriestatus, Ladevorgang
-- Konfigurierbare Scan-Intervalle
-- Unterstützung für verschiedene WLANThermo-Modelle
-- Offline-toleranter Start (Entitäten werden verfügbar, sobald das Gerät online ist)
-- Pitmaster-Kanal-Auswahl: Kanal für jeden Pitmaster anzeigen und wählen
-- Dynamischer Cloud-Status-Sensor: zeigt immer den aktuellen Verbindungsstatus
-- Verbesserte Übersetzungsunterstützung für alle Status- und Auswahlwerte
-- Neuer Lichtsensor für die Farbauswahl
-- Konfigurationsfluss und Optionsfluss für erweiterte Einstellungen
-- Schalter zur Anzeige der Sensortemperatur als 999 oder nicht verfügbar
+```
 
-## API-Referenz
-- Offizielle HTTP-API: https://github.com/WLANThermo-nano/WLANThermo_ESP32_Software/wiki/HTTP
-- Routen **kleingeschrieben** verwenden (`/setpitmaster`, `/setchannels`, `/setpid`, `/setsystem`)
-- Für Pitmaster-Writes: vollständige verschachtelte PM-Objekte im Array senden
+## Installation über HACS (empfohlen)
+
+1. Öffne Home Assistant und gehe zu  
+   **Einstellungen → Geräte & Dienste → HACS**
+2. Wähle **Integrationen**
+3. Klicke oben rechts auf die drei Punkte (⋮) → **Benutzerdefiniertes Repository**
+4. Gib folgende URL ein: `https://github.com/WLANThermo-nano/homeassistant` Typ: **Integration**
+5. Suche anschließend nach **WLANThermo**
+6. Installiere die Integration
+7. Starte Home Assistant neu
+
+---
 
 ## Manuelle Installation
-1. Repository entpacken
-2. `custom_components/wlanthermo` nach `<HA config>/custom_components/` kopieren
+
+1. Repository herunterladen oder entpacken
+2. Ordner  `custom_components/wlanthermo` nach `<HA config>/custom_components/` kopieren
 3. Home Assistant neu starten
 
-## Installation über HACS
-
-1. Öffne Home Assistant und gehe zu **Einstellungen → Geräte & Dienste → HACS**.
-2. Wähle **Integrationen** und klicke oben rechts auf die drei Punkte (⋮) → **Benutzerdefiniertes Repository**.
-3. Gib die URL dieses Repositories ein: `https://github.com/WLANThermo-nano/homeassistant` und wähle **Integration** als Typ.
-4. Suche nach **WLANThermo** in HACS, installiere die Integration und starte Home Assistant neu.
+---
 
 ## Einrichtung
+
 1. Home Assistant öffnen
-2. Einstellungen → Geräte & Dienste → **Integration hinzufügen** → **WLANThermo**
-3. Host, Port und ggf. Pfad-Präfix angeben
+2. **Einstellungen → Geräte & Dienste → Integration hinzufügen**
+3. **WLANThermo** auswählen
+4. IP-Adresse / Host, Port und optionales Pfad-Präfix angeben
+5. Einrichtung abschließen
 
-## Einrichtung der Integration
+---
 
-1. Gehe zu **Einstellungen → Geräte & Dienste → Integration hinzufügen**.
-2. Suche nach **WLANThermo** und wähle sie aus.
-3. Gib die IP-Adresse deines WLANThermo Geräts ein und ändere gegebenenfalls den Namen.
-4. Schließe die Einrichtung ab und bestätige den Dialoge.
+## Optionen der Integration
 
-### Optionen für die Integration
+Die Optionen erreichst du über:
 
-Die Integration bietet einen Optionsfluss, mit dem Benutzer die folgenden Einstellungen anpassen können:
+**Einstellungen → Geräte & Dienste → WLANThermo → Optionen**
 
-1. **IP Adresse:**
-   - Kann angepasst werden, falls sich die interne IP ändert im Router.
-   
-2. **Scan-Intervall:**
-   - Legen Sie fest, wie oft die Integration Daten vom WLANThermo-Gerät abruft.
-   - Standardwert: 10 Sekunden.
+### Verfügbare Optionen
 
-3. **Anzeige der Sensortemperatur:**
-   - Wählen Sie, ob die Sensortemperatur als `999` oder als `nicht verfügbar` angezeigt werden soll, wenn keine Daten vorliegen.
+- **IP-Adresse / Host**
+- Kann angepasst werden, falls sich die interne IP im Router ändert
 
-3. **Authentifizierung:**
-   - Anpassen und Setzen der Authentifizierung, falls diese in der Weboberfläche nötig ist.
+- **Scan-Intervall**
+- Legt fest, wie oft Daten vom WLANThermo abgerufen werden
+- Standard: **10 Sekunden**
 
-Diese Optionen können jederzeit über die Home Assistant-Oberfläche geändert werden:
+- **Anzeige inaktiver Sensoren**
+- `999` anzeigen oder als **nicht verfügbar**
 
-1. Gehe zu **Einstellungen → Geräte & Dienste → Integration bearbeiten**.
-2. Wähle den gewünschten Integrationseintrag aus.
-3. Passe die Optionen im angezeigten Dialog an.
+- **Authentifizierung**
+- Benutzername / Passwort, falls in der Weboberfläche aktiviert
 
-## Entitäten (Beispiele)
-- **Pitmaster**: Duty Cycle, Kanal, PID-Status, Sollwert
-- **Kanäle**: Temperatur, Alarm, Sensortyp, Min/Max, Restzeit (Time Left)
-- **System**: RSSI, Batteriestatus, Ladevorgang
-- **Lichtsensor**: Farbtemperatur, Helligkeit
+---
 
-### Sensor: Restzeit (Time Left)
+## Entitäten (Auswahl)
 
-Für jeden Temperaturkanal wird automatisch ein Sensor `channel_*_time_left` erstellt. Dieser zeigt die geschätzte verbleibende Zeit (in Minuten) an, bis die aktuelle Temperatur den eingestellten Zielwert (Max) erreicht.
+### Kanäle
+- Temperatur
+- Alarmmodus (Select)
+- Sensortyp (Select)
+- Min / Max
+- **Restzeit (Time Left)**
+- Farbe (Light / Text)
 
-**Berechnung:**
-- Die Restzeit basiert auf dem Durchschnitt der Temperaturänderung der letzten Minuten (gleitendes Fenster).
-- Die Formel lautet:
+### Pitmaster
+- Leistung (%)
+- Temperatur
+- Modus (Auto / Manuell / Aus)
+- PID-Profil
+- Zugewiesener Kanal
 
-	Restzeit (min) = (Zieltemperatur - aktuelle Temperatur) / (Temperaturanstieg pro Minute)
+### System / Diagnose
+- WLAN-RSSI
+- Batteriestand
+- Ladezustand
+- Cloud-Status
+- Cloud-URL
+- Geräte- & Systeminformationen
 
-- Wenn die Temperatur stagniert oder sinkt, wird 0 angezeigt.
-- Ist der Kanal nicht verbunden oder keine Daten vorhanden, bleibt der Sensor leer.
+---
 
-**Anwendungsfall:**
-- Praktisch für Grill- oder Garvorgänge, um abzuschätzen, wann das Grillgut fertig ist.
+## Sensor: Restzeit (Time Left)
 
-## Konfiguration
-Die Integration nutzt einen Konfigurationsdialog (Config Flow). Es sind keine manuellen YAML-Einträge notwendig.
+Für jeden Temperaturkanal wird automatisch ein Sensor  
+`kanal_*_restzeit` erstellt.
+
+### Berechnung
+
+- Basierend auf dem Durchschnitt der Temperaturänderung
+- Gleitendes Zeitfenster (mehrere Minuten)
+
+Formel:
+```
+Restzeit (min) =
+(Zieltemperatur – aktuelle Temperatur) / Temperaturanstieg pro Minute
+```
+
+### Verhalten
+
+- Sinkende oder stagnierende Temperatur → **0 Minuten**
+- Nicht verbundene Kanäle → **kein Wert**
+
+Ideal für Grill- & Garprozesse 🔥
+
+---
+
+## API-Hinweise
+
+- Offizielle HTTP-API:  
+  https://github.com/WLANThermo-nano/WLANThermo_ESP32_Software/wiki/HTTP
+
+- Routen **kleingeschrieben** verwenden:
+```
+/setpitmaster
+/setchannels
+/setpid
+/setsystem
+```
+
+---
 
 ## Entwicklung & Beiträge
-Pull Requests, Fehlerberichte und Feature-Wünsche sind willkommen!
 
-### Sensor: Kanalfarbe (Schalter)
-
-Für jeden Kanal wird automatisch ein Sensor `light.wlanthermo_channel_*_color` erstellt. Dieser ist eigentlich eine Lampe, wird hier aber genutzt, um einen Farbwähler für die Kanalfarbe zu haben.
-
-**Achtung:**
-- Der Sensor kann nur auf eingesteckte Kanäle/Sensoren verwendet werden.
-- Der Wert ist gleich zum Textfeld
-- Ausschalten, Helligkeit und der Schalter haben keine Funktion.
+Pull Requests, Bugreports und Feature-Wünsche sind willkommen ❤️  
+Bitte möglichst mit Logs und klarer Fehlerbeschreibung.
