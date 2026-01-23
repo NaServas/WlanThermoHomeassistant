@@ -20,19 +20,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = entry_data["coordinator"]
 
     entity_store = entry_data.setdefault("entities", {})
-    entity_store.setdefault("lights", set())
+    entity_store.setdefault("text_channels", set())
 
-    async def _async_discover_lights():
+    async def _async_discover_entities():
         if not coordinator.data:
             return
 
-    entities = []
-    for channel in coordinator.data.channels:
-        entities.append(
-            WlanthermoChannelNameText(coordinator, channel, entry_data)
-        )
+        new_entities = []
 
-    async_add_entities(entities)
+        for channel in getattr(coordinator.data, "channels", []):
+            ch_id = channel.number
+
+            if ch_id not in entity_store["text_channels"]:
+                new_entities.append(
+                    WlanthermoChannelNameText(coordinator, channel, entry_data)
+                )
+                entity_store["text_channels"].add(ch_id)
+
+        if new_entities:
+            async_add_entities(new_entities)
+
+    coordinator.async_add_listener(_async_discover_entities)
+    await _async_discover_entities()
 
 
 class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
@@ -79,10 +88,6 @@ class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
         """
         Set a new name for the channel and update the device via the API.
         """
-        api = self.coordinator.hass.data[DOMAIN][
-            self.coordinator.config_entry.entry_id
-        ]["api"]
-
         channel = self._get_channel()
         if not channel:
             return
@@ -97,5 +102,5 @@ class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
             "color": channel.color,
         }
 
-        await api.async_set_channel(channel_data)
+        await self.coordinator.api.async_set_channel(channel_data)
         await self.coordinator.async_request_refresh()

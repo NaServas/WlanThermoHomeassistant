@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         new_entities = []
 
         # Channels
-        for channel in coordinator.data.channels:
+        for channel in getattr(coordinator.data, "channels", []):
             ch_id = channel.number
 
             if ch_id not in entity_store["channels"]:
@@ -64,7 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity_store["channels"].add(ch_id)
 
         # Pitmasters
-        for pitmaster in coordinator.data.pitmasters:
+        for pitmaster in getattr(coordinator.data, "pitmasters", []):
             pm_id = pitmaster.id
 
             if pm_id not in entity_store["pitmasters"]:
@@ -671,6 +671,7 @@ class WlanthermoCloudOnlineSensor(CoordinatorEntity, SensorEntity):
             return None
 
         value = getattr(system, "online", None)
+        
         try:
             return {
                 0: "not_connected",

@@ -13,7 +13,9 @@
           "show_inactive_unavailable": "Inaktive Sensoren als nicht verfügbar anzeigen",
           "auth_required": "Authentifizierung erforderlich",
           "username": "Benutzername",
-          "password": "Passwort"
+          "username_optional": "Benutzername (nur eingeben wenn Authentifizierung erforderlich ist)",
+          "password": "Passwort",
+          "password_optional": "Passwort (nur eingeben wenn Authentifizierung erforderlich ist)"
         }
       }
     },
@@ -32,7 +34,9 @@
           "show_inactive_unavailable": "Inaktive Sensoren als nicht verfügbar anzeigen",
           "auth_required": "Authentifizierung erforderlich",
           "username": "Benutzername",
+          "username_optional": "Benutzername (nur eingeben wenn Authentifizierung erforderlich ist)",
           "password": "Passwort",
+          "password_optional": "Passwort (nur eingeben wenn Authentifizierung erforderlich ist)",
           "scan_interval": "Abfrage-Intervall (Sekunden)"
         }
       }
@@ -87,7 +91,9 @@
       "channel_color": {"name": "Kanal {channel_number} Farbe"}
     },
     "select": {
-      "channel_alarm": {"name": "Kanal {channel_number} Alarmmodus"},
+      "channel_alarm": {"name": "Kanal {channel_number} Alarmmodus",
+        "options": {"off": "Aus","push": "Push","buzzer": "Summer","push_buzzer": "Push + Summer"}
+      },
       "channel_typ": {"name": "Kanal {channel_number} Sensortyp"},
       "pitmaster_typ": {"name": "Pitmaster {pitmaster_number} Modus"},
       "pitmaster_pid": {"name": "Pitmaster {pitmaster_number} PID-Profil"},

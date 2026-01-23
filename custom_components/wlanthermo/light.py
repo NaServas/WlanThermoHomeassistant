@@ -33,11 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if ch_id not in entity_store["lights"]:
                 new_entities.append(
-                    WlanthermoChannelColorLight(
-                        coordinator,
-                        channel,
-                        entry_data,
-                    )
+                    WlanthermoChannelColorLight(coordinator, channel, entry_data)
                 )
                 entity_store["lights"].add(ch_id)
 
@@ -55,12 +51,10 @@ class WlanthermoChannelColorLight(CoordinatorEntity, LightEntity):
     _attr_has_entity_name = True
     _attr_icon = "mdi:palette"
 
-
     def __init__(self, coordinator, channel, entry_data):
         super().__init__(coordinator)
 
         self._channel_number = channel.number
-        self._api = entry_data["api"]
 
         self._attr_translation_key = "channel_color"
         self._attr_translation_placeholders = {
@@ -143,7 +137,7 @@ class WlanthermoChannelColorLight(CoordinatorEntity, LightEntity):
             "color": color,
         }
 
-        await self._api.async_set_channel(payload)
+        result = await self.coordinator.api.async_set_channel(payload)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
