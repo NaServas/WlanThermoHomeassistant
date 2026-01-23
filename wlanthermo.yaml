@@ -357,7 +357,7 @@ views:
                               border-radius: 12px;
                               padding: 8px;
                               background-color:
-                                {% set v = states('sensor.wlanthermo_batteriestand') | int %}
+                                {% set v = states('sensor.wlanthermo_batteriestand') | int(default=0) %}
                                 {% if v > 60 %}
                                   rgba(0,200,0,0.3)
                                 {% elif v > 30 %}
@@ -376,7 +376,7 @@ views:
                               border-radius: 12px;
                               padding: 8px;
                               background-color:
-                                {% set v = states('sensor.wlanthermo_signalstarke') | int %}
+                                {% set v = states('sensor.wlanthermo_signalstarke') | int(default=0) %}
                                 {% if v > -60 %}
                                   rgba(0,200,0,0.3)
                                 {% elif v > -75 %}
