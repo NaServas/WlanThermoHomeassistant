@@ -71,6 +71,7 @@ For the included sample dashboard `wlanthermo_en.yaml`, the following frontend e
 - [Mushroom](https://github.com/piitaya/lovelace-mushroom) (`Mushroom`)
 - [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (`apexcharts-card`)
 - [Card Mod](https://github.com/thomasloven/lovelace-card-mod) (`card-mod`)
+- [Browser Mod](https://github.com/thomasloven/hass-browser_mod) (`browser-mod`)
 
 **Important:**  
 Replace all occurrences of `wlanthermo` with your device name.

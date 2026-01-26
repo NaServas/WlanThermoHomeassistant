@@ -71,6 +71,7 @@ Für das mitgelieferte Beispiel-Dashboard `wlanthermo.yaml` werden folgende Fron
 - [Mushroom](https://github.com/piitaya/lovelace-mushroom) (`Mushroom`)
 - [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (`apexcharts-card`)
 - [Card Mod](https://github.com/thomasloven/lovelace-card-mod) (`card-mod`)
+- [Browser Mod](https://github.com/thomasloven/hass-browser_mod) (`browser-mod`)
 
 **Wichtig:**  
 Alle Vorkommen von `wlanthermo` müssen auf deinen Gerätenamen angepasst werden.
