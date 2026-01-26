@@ -448,14 +448,18 @@ class WlanthermoPidProfileSelect(CoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str):
         value = self._value_map[option]
-        
-        for p in getattr(self.coordinator.api.settings, "pid", []):
+
+        for p in self.coordinator.api.settings.pid:
             if p.id == self._profile_id:
-                payload = {
-                    "id": p.id,
-                    self._key: value,
-                }
-                await self.coordinator.api.async_set_pid_profile([payload],method="PATCH")
-                await self.coordinator.async_request_refresh()
+                setattr(p, self._key, value)
+
+                payload = p.to_full_payload()
+
+                success = await self.coordinator.api.async_set_pid_profile(
+                    [payload]
+                )
+                if success:
+                    await self.coordinator.async_request_refresh()
                 return
+
             

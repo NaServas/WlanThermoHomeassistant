@@ -223,6 +223,24 @@ class PIDConfig:
         except IndexError:
             return "UNKNOWN"
 
+    def to_full_payload(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "aktor": self.aktor,
+            "Kp": self.Kp,
+            "Ki": self.Ki,
+            "Kd": self.Kd,
+            "DCmmin": self.DCmmin,
+            "DCmmax": self.DCmmax,
+            "opl": int(self.opl),
+            "SPmin": self.SPmin,
+            "SPmax": self.SPmax,
+            "link": self.link,
+            "tune": int(self.tune),
+            "jp": self.jp,
+        }
+
 
 class DisplayInfo:
     """
