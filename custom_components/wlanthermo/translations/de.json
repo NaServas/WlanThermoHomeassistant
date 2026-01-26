@@ -108,7 +108,9 @@
         }
       },
       "pitmaster_pid": {"name": "Pitmaster {pitmaster_number} PID Profil"},
-      "pitmaster_channel": {"name": "Pitmaster {pitmaster_number} Kanal"}
+      "pitmaster_channel": {"name": "Pitmaster {pitmaster_number} Kanal"},
+      "low_alarm_state": {"name": "Untertemperatur Alarm"},
+      "high_alarm_state": {"name": "Übertemperatur Alarm"}
     },
     "number": {
       "channel_min": {"name": "Kanal {channel_number} Minimum"},

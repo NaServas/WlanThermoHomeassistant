@@ -1,0 +1,128 @@
+wlanthermo_niedrigtemperaturalarm_mit_confirm:
+  sequence:
+  - alias: Set up variables
+    variables:
+      action_time_out: '{{ ''CONFIRM_'' ~ context.id }}'
+      action_ignore: '{{ ''DISMISS_'' ~ context.id }}'
+  - action: notify.notify_all_devices
+    metadata: {}
+    data:
+      title: 'WLANThermo: Temperatur Alarm'
+      data:
+        actions:
+        - action: '{{ action_time_out }}'
+          title: 5min Time-Out
+        - action: '{{ action_ignore }}'
+          title: ignore
+        tag: wtherm_temp_alarm_notification
+      message: "\n{% set low_alarms_active = states('sensor.wlanthermo_niedertemperatur_alarm')
+        %}\n{% set high_alarms_active = states('sensor.wlanthermo_hochtemperatur_alarm')
+        %}\n\n{#\n{% set low_alarms_active  = \"0b000010111\" %} \n{% set high_alarms_active
+        = \"0b100010001\" %} \n#}\n\n{% set data  = namespace( continue = false, alarm_type
+        = [], active_alarms = 0, alarm_list = [], ch_low_alarm_active = [], ch_high_alarm_active
+        = [])%}\n{% set param = namespace(ch_names = []) %}\n\n\n\n{% set param.ch_names
+        =  [states('text.wlanthermo_kanal_9_name'),\nstates('text.wlanthermo_kanal_8_name'),\nstates('text.wlanthermo_kanal_7_name'),\nstates('text.wlanthermo_kanal_6_name'),\nstates('text.wlanthermo_kanal_5_name'),\nstates('text.wlanthermo_kanal_4_name'),\nstates('text.wlanthermo_kanal_3_name'),\nstates('text.wlanthermo_kanal_2_name'),\nstates('text.wlanthermo_kanal_1_name')]
+        \ %}\n\n{% set param.ch_temps = [states('sensor.wlanthermo_kanal_9_temperatur'),\nstates('sensor.wlanthermo_kanal_8_temperatur'),\nstates('sensor.wlanthermo_kanal_7_temperatur'),\nstates('sensor.wlanthermo_kanal_6_temperatur'),\nstates('sensor.wlanthermo_kanal_5_temperatur'),\nstates('sensor.wlanthermo_kanal_4_temperatur'),\nstates('sensor.wlanthermo_kanal_3_temperatur'),\nstates('sensor.wlanthermo_kanal_2_temperatur'),\nstates('sensor.wlanthermo_kanal_1_temperatur')]%}\n\n{%
+        set param.low_tresh = [states('number.wlanthermo_kanal_9_minimum'),\nstates('number.wlanthermo_kanal_8_minimum'),\nstates('number.wlanthermo_kanal_7_minimum'),\nstates('number.wlanthermo_kanal_6_minimum'),\nstates('number.wlanthermo_kanal_5_minimum'),\nstates('number.wlanthermo_kanal_4_minimum'),\nstates('number.wlanthermo_kanal_3_minimum'),\nstates('number.wlanthermo_kanal_2_minimum'),\nstates('number.wlanthermo_kanal_1_minimum')]%}\n\n{%
+        set param.high_tresh = [states('number.wlanthermo_kanal_9_maximum'),\nstates('number.wlanthermo_kanal_8_maximum'),\nstates('number.wlanthermo_kanal_7_maximum'),\nstates('number.wlanthermo_kanal_6_maximum'),\nstates('number.wlanthermo_kanal_5_maximum'),\nstates('number.wlanthermo_kanal_4_maximum'),\nstates('number.wlanthermo_kanal_3_maximum'),\nstates('number.wlanthermo_kanal_2_maximum'),\nstates('number.wlanthermo_kanal_1_maximum')]%}\n\n{%
+        set param.ch_alarm_type =\n[states('select.wlanthermo_kanal_9_alarmmodus'),\nstates('select.wlanthermo_kanal_8_alarmmodus'),\nstates('select.wlanthermo_kanal_7_alarmmodus'),\nstates('select.wlanthermo_kanal_6_alarmmodus'),\nstates('select.wlanthermo_kanal_5_alarmmodus'),\nstates('select.wlanthermo_kanal_4_alarmmodus'),\nstates('select.wlanthermo_kanal_3_alarmmodus'),\nstates('select.wlanthermo_kanal_2_alarmmodus'),\nstates('select.wlanthermo_kanal_1_alarmmodus')]%}\n\n\n{%
+        set strings = namespace() %}\n\n\n\n\n{%for i in range(1,10)%} \n  {% set
+        data.ch_low_alarm_active = data.ch_low_alarm_active +  [((low_alarms_active[-i]
+        == \"1\") and ((param.ch_alarm_type[-i] == \"push\") or (param.ch_alarm_type[-i]
+        == \"push_buzzer\")))]%}\n  {% set data.ch_high_alarm_active = data.ch_high_alarm_active
+        +  [((high_alarms_active[-i] == \"1\") and ((param.ch_alarm_type[-i] == \"push\")
+        or (param.ch_alarm_type[-i] == \"push_buzzer\")))]%}\n  \n  {%if ((low_alarms_active[-i]
+        >= '1') and (data.ch_low_alarm_active[i-1] == true)) or ((high_alarms_active[-i]
+        >= '1') and (data.ch_high_alarm_active[i-1] == true))%}\n    {% set data.alarm_list
+        = data.alarm_list + [i]  %}\n    {%if ((low_alarms_active[-i] >= '1') and
+        (data.ch_low_alarm_active[i-1] == true)) %}\n      \n      {% set data.active_alarms
+        = data.active_alarms + 1 %}\n      {#{% set data.alarm_type = data.alarm_type
+        + [\"low\"]  %} #}\n      {% set data.continue = true %}\n    {%endif%}\n
+        \   {%if ((high_alarms_active[-i] >= '1') and (data.ch_high_alarm_active[i-1]
+        == true)) %}\n      {% set data.active_alarms = data.active_alarms + 1 %}\n
+        \     {#{% set data.alarm_type = data.alarm_type + [\"high\"]  %} #}\n      {%
+        set data.continue = true %}\n    {%endif%}\n  {%endif %}\n\n{%endfor%}\n\n{#\n{{
+        data}}\n\n{{ param }}\n#}\n\n\n{%if (data.active_alarms == 0)         %}\n
+        \ {% set data.string = \"Keine high_alarm Notifikation aktiv!\"  %}\n{%else%}\n
+        \ {% set data.string = \"\" %}\n    {%for i in data.alarm_list %}  \n      {%if
+        data.ch_low_alarm_active[i-1] %}\n        {% set data.string = data.string
+        ~  \"Ch \" ~ i ~ \" Low  Temp: \"~ param.ch_names[-i] ~ \": \" ~ param.ch_temps[-i]
+        ~ \" °C < \"~ param.low_tresh[-i] ~ \" °C\\n\"   %}\n      {%endif%} \n      {%if
+        data.ch_high_alarm_active[i-1] %}\n        {% set data.string = data.string
+        ~  \"Ch \" ~ i ~ \" High Temp: \"~ param.ch_names[-i] ~ \": \" ~ param.ch_temps[-i]
+        ~ \" °C > \"~ param.low_tresh[-i] ~ \" °C\\n\"   %}   \n      {%endif%}\n
+        \   {%endfor%}\n{%endif%}\n\n\n{{ data.string}}"
+  - alias: Awaiting response
+    wait_for_trigger:
+    - event_type: mobile_app_notification_action
+      event_data:
+        action: '{{ action_time_out }}'
+      trigger: event
+    - event_type: mobile_app_notification_action
+      event_data:
+        action: '{{ action_ignore }}'
+      trigger: event
+    timeout:
+      hours: 1
+      minutes: 0
+      seconds: 0
+    continue_on_timeout: false
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ wait.trigger.event.data.action == action_time_out }}'
+      sequence:
+      - delay:
+          hours: 0
+          minutes: 5
+          seconds: 0
+          milliseconds: 0
+        enabled: false
+    - conditions:
+      - condition: template
+        value_template: '{{ wait.trigger.event.data.action == action_ignore }}'
+      sequence: []
+  alias: WLANThermo Temperaturalarm mit Time-Out
+  mode: restart
+  description: ''
+  
+wlanthermo_offline_alarm_mit_time_out:
+  sequence:
+  - alias: Set up variables
+    variables:
+      action_disable: '{{ ''DISMISS_'' ~ context.id }}'
+  - action: notify.notify_all_devices
+    metadata: {}
+    data:
+      title: WLANThermo
+      data:
+        actions:
+        - action: '{{ action_disable }}'
+          title: Disable Alarm
+        tag: wtherm_offline_alarm_notification
+      message: WLANThermo Offline
+  - alias: Awaiting response
+    wait_for_trigger:
+    - event_type: mobile_app_notification_action
+      event_data:
+        action: '{{ action_disable }}'
+      trigger: event
+    timeout:
+      hours: 1
+      minutes: 0
+      seconds: 0
+    continue_on_timeout: false
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ wait.trigger.event.data.action == action_disable }}'
+      sequence:
+      - action: automation.turn_off
+        metadata: {}
+        target:
+          entity_id: automation.wlanthermo_offline_alarm
+        data:
+          stop_actions: true
+  alias: 'WLANThermo: Offline Alarm mit Disable'
+  mode: restart
+  description: ''

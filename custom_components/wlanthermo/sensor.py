@@ -89,6 +89,8 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
                 WlanthermoSystemTimeSensor(coordinator, entry_data),
                 WlanthermoSystemUnitSensor(coordinator, entry_data),
                 WlanthermoSystemSocSensor(coordinator, entry_data),
+                WlanthermoLowAlarmStateSensor(coordinator, entry_data),
+                WlanthermoHighAlarmStateSensor(coordinator, entry_data),
                 WlanthermoSystemChargeSensor(coordinator, entry_data),
                 WlanthermoSystemRssiSensor(coordinator, entry_data),
                 WlanthermoCloudOnlineSensor(coordinator, entry_data),
@@ -181,6 +183,28 @@ class WlanthermoChannelTemperatureSensor(CoordinatorEntity, SensorEntity):
         if temp == 999.0 and show_inactive:
             return None
         return temp
+
+    @property
+    def extra_state_attributes(self):
+        """
+        Additional channel alarm state.
+        """
+
+        channel = self._get_channel()
+        if not channel:
+            return None
+
+        low_alarm = getattr(channel, "low_alarm", None)
+        high_alarm = getattr(channel, "high_alarm", None)
+        min_temp = getattr(channel, "min", None)
+        max_temp = getattr(channel, "max", None)
+
+        return {
+            "low_temp_alarm": low_alarm,
+            "high_temp_alarm": high_alarm,
+            "min_temp": min_temp,
+            "max_temp": max_temp,
+        }
 
     @property
     def available(self) -> bool:
@@ -586,7 +610,81 @@ class WlanthermoSystemSocSensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         return self.coordinator.last_update_success
-    
+
+class WlanthermoLowAlarmStateSensor(CoordinatorEntity, SensorEntity):
+    """
+    Sensor entity for a combined low alarm state.
+    Every digit represents the low alarm state of the channel (1 = alarm active, 0 = no alarm active).
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "low_alarm_state"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:alarm-light-outline"
+
+    def __init__(self, coordinator: Any, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_system_low_alarm_states"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        channels = getattr(self.coordinator.data, "channels", [])
+
+        low_alarm_states_lis: list = list("0b000000000")
+        for ch in channels:
+            ch_alarm_state = getattr(ch, "low_alarm", None)
+            ch_nr = getattr(ch, "number", None) - 1
+            low_alarm_states_lis[-(ch_nr + 1)] = "1" if ch_alarm_state else "0"
+
+        try:
+            return "".join(low_alarm_states_lis)
+        except TypeError:
+            return None
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.last_update_success
+
+class WlanthermoHighAlarmStateSensor(CoordinatorEntity, SensorEntity):
+    """
+    Sensor entity for a combined high alarm state.
+    Every digit represents the high alarm state of the channel (1 = alarm active, 0 = no alarm active).
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "high_alarm_state"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:alarm-light-outline"
+
+    def __init__(self, coordinator: Any, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_system_high_alarm_states"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        channels = getattr(self.coordinator.data, "channels", [])
+
+        high_alarm_states_lis: list = list("0b000000000")
+        for ch in channels:
+            ch_alarm_state = getattr(ch, "high_alarm", None)
+            ch_nr = getattr(ch, "number", None) - 1
+            high_alarm_states_lis[-(ch_nr + 1)] = "1" if ch_alarm_state else "0"
+
+        try:
+            return "".join(high_alarm_states_lis)
+        except TypeError:
+            return None
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.last_update_success
+        
 class WlanthermoSystemChargeSensor(CoordinatorEntity, BinarySensorEntity):
     """
     Binary sensor indicating whether the battery is currently charging.
@@ -1068,7 +1166,29 @@ class WlanthermoPitmasterTemperatureSensor(CoordinatorEntity, SensorEntity):
             if getattr(system, "unit", None) == "F"
             else UnitOfTemperature.CELSIUS
         )
-    
+
+    @property
+    def extra_state_attributes(self):
+        """
+        Additional channel alarm state.
+        """
+
+        channel = self._get_channel()
+        if not channel:
+            return None
+
+        low_alarm = getattr(channel, "low_alarm", None)
+        high_alarm = getattr(channel, "high_alarm", None)
+        min_temp = getattr(channel, "min", None)
+        max_temp = getattr(channel, "max", None)
+
+        return {
+            "low_temp_alarm": low_alarm,
+            "high_temp_alarm": high_alarm,
+            "min_temp": min_temp,
+            "max_temp": max_temp,
+        }
+
     @property
     def available(self) -> bool:
         """

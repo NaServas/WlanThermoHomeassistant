@@ -87,6 +87,8 @@ class Channel:
         self.temp: float = float(data.get("temp", 0.0))
         self.min: float = float(data.get("min", 0.0))
         self.max: float = float(data.get("max", 0.0))
+        self.low_alarm: bool = bool(True if (self.temp < self.min) else False)
+        self.high_alarm: bool = bool(True if ((self.temp < 999.0) and (self.temp > self.max)) else False)
         self.alarm: int = int(data.get("alarm", 0))
         self.color: str = str(data.get("color", "#000000"))
         self.fixed: bool = bool(data.get("fixed", False))
