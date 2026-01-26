@@ -1,0 +1,270 @@
+- id: '1770162680353'
+  alias: 'WLANThermo: Temperatur Alarm'
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: /1
+  conditions:
+  - condition: template
+    value_template: '{{ (states(''sensor.wlanthermo_niedertemperatur_alarm'') != "0b000000000")
+      or (states(''sensor.wlanthermo_hochtemperatur_alarm'') != "0b000000000")}}'
+  - condition: state
+    entity_id: sensor.wlanthermo_system_status
+    state:
+    - online
+  - condition: template
+    value_template: "{% set low_alarms_active = states('sensor.wlanthermo_niedertemperatur_alarm')
+      %}\n{% set high_alarms_active = states('sensor.wlanthermo_hochtemperatur_alarm')
+      %}\n\n{#\n{% set low_alarms_active  = \"0b000010111\" %} \n{% set high_alarms_active
+      = \"0b100010001\" %} \n#}\n\n{% set data  = namespace( continue = false, alarm_type
+      = [], active_alarms = 0, alarm_list = [], ch_low_alarm_active = [], ch_high_alarm_active
+      = [])%}\n{% set param = namespace(ch_names = []) %}\n\n{% set param.ch_alarm_type
+      =\n[states('select.wlanthermo_kanal_9_alarmmodus'),\nstates('select.wlanthermo_kanal_8_alarmmodus'),\nstates('select.wlanthermo_kanal_7_alarmmodus'),\nstates('select.wlanthermo_kanal_6_alarmmodus'),\nstates('select.wlanthermo_kanal_5_alarmmodus'),\nstates('select.wlanthermo_kanal_4_alarmmodus'),\nstates('select.wlanthermo_kanal_3_alarmmodus'),\nstates('select.wlanthermo_kanal_2_alarmmodus'),\nstates('select.wlanthermo_kanal_1_alarmmodus')]%}\n{%
+      set strings = namespace() %}\n\n{%for i in range(1,10)%} \n  {% set data.ch_low_alarm_active
+      = data.ch_low_alarm_active +  [((low_alarms_active[-i] == \"1\") and ((param.ch_alarm_type[-i]
+      == \"push\") or (param.ch_alarm_type[-i] == \"push_buzzer\")))]%}\n  {% set
+      data.ch_high_alarm_active = data.ch_high_alarm_active +  [((high_alarms_active[-i]
+      == \"1\") and ((param.ch_alarm_type[-i] == \"push\") or (param.ch_alarm_type[-i]
+      == \"push_buzzer\")))]%}\n  \n  {%if ((low_alarms_active[-i] >= '1') and (data.ch_low_alarm_active[i-1]
+      == true)) or ((high_alarms_active[-i] >= '1') and (data.ch_high_alarm_active[i-1]
+      == true))%}\n    {% set data.alarm_list = data.alarm_list + [i]  %}\n    {%if
+      ((low_alarms_active[-i] >= '1') and (data.ch_low_alarm_active[i-1] == true))
+      %}\n      \n      {% set data.active_alarms = data.active_alarms + 1 %}\n      {#{%
+      set data.alarm_type = data.alarm_type + [\"low\"]  %} #}\n      {% set data.continue
+      = true %}\n    {%endif%}\n    {%if ((high_alarms_active[-i] >= '1') and (data.ch_high_alarm_active[i-1]
+      == true)) %}\n      {% set data.active_alarms = data.active_alarms + 1 %}\n
+      \     {#{% set data.alarm_type = data.alarm_type + [\"high\"]  %} #}\n      {%
+      set data.continue = true %}\n    {%endif%}\n  {%endif %}\n{%endfor%}\n\n{{data.continue}}"
+  actions:
+  - parallel:
+    - action: script.wlanthermo_niedrigtemperaturalarm_mit_confirm
+      metadata: {}
+      data: {}
+    - sequence:
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 58
+          milliseconds: 0
+      - action: notify.notify_all_devices
+        data:
+          message: clear_notification
+          data:
+            tag: wtherm_temp_alarm_notification
+  mode: single
+  
+- id: '1770325178342'
+  alias: 'WLANThermo: Reset  TempAlarm Timeout'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - automation.wlanthermo_temperatur_alarm
+    to:
+    - 'off'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  conditions: []
+  actions:
+  - action: automation.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: automation.wlanthermo_temperatur_alarm
+  mode: single
+  
+- id: '1770464606770'
+  alias: 'WLANThermo: Offline Alarm'
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: /1
+  conditions:
+  - condition: template
+    value_template: '{{states(''sensor.wlanthermo_system_status'') != "online" }}'
+  actions:
+  - parallel:
+    - action: script.wlanthermo_offline_alarm_mit_time_out
+      metadata: {}
+      data: {}
+    - sequence:
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 58
+          milliseconds: 0
+      - action: notify.notify_all_devices
+        data:
+          message: clear_notification
+          data:
+            tag: wtherm_offline_alarm_notification
+    enabled: true
+  mode: single
+  
+- id: '1770465428360'
+  alias: 'WLANThermo: Re-Enable Offline Alarm on Connection'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.wlanthermo_system_status
+    to:
+    - online
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+  conditions: []
+  actions:
+  - action: automation.turn_on
+    metadata: {}
+    target:
+      entity_id: automation.wlanthermo_offline_alarm
+    data: {}
+  mode: single
+  
+- id: '1770559603235'
+  alias: 'WLANThermo: Endzeit Alarme'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.wlanthermo_kanale_unter_60min
+    - sensor.wlanthermo_kanale_unter_30min
+    - sensor.wlanthermo_kanale_unter_15min
+    - sensor.wlanthermo_kanale_unter_5min
+  - trigger: template
+    value_template: '{# If at least one element is inside the 2 brackets [] #}
+
+      {{states(''sensor.wlanthermo_zeiten_unter_1_min'') | count > 2}}'
+    enabled: false
+  - trigger: state
+    entity_id:
+    - sensor.wlanthermo_zeiten_unter_1_min
+    enabled: false
+  conditions:
+  - condition: state
+    entity_id: sensor.wlanthermo_system_status
+    state:
+    - online
+  actions:
+  - action: notify.notify_all_devices
+    data:
+      message: clear_notification
+      data:
+        tag: wtherm_time_alarm_notification
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 250
+    enabled: true
+  - action: notify.notify_all_devices
+    metadata: {}
+    data:
+      title: 'WLANThermo: Zeitbenachrichtigung'
+      message: "{% set data  = namespace( continue = false, sub_60min = [], sub_30min
+        = [], sub_15min = [], sub_5min = []) %} {% set param = namespace(ch_names
+        = [], ch_temps = []) %}\n{% set param.ch_names =  [states('text.wlanthermo_kanal_9_name'),
+        states('text.wlanthermo_kanal_8_name'), states('text.wlanthermo_kanal_7_name'),
+        states('text.wlanthermo_kanal_6_name'), states('text.wlanthermo_kanal_5_name'),
+        states('text.wlanthermo_kanal_4_name'), states('text.wlanthermo_kanal_3_name'),
+        states('text.wlanthermo_kanal_2_name'), states('text.wlanthermo_kanal_1_name')]
+        \ %}\n{% set param.ch_temps = [states('sensor.wlanthermo_kanal_9_temperatur'),
+        states('sensor.wlanthermo_kanal_8_temperatur'), states('sensor.wlanthermo_kanal_7_temperatur'),
+        states('sensor.wlanthermo_kanal_6_temperatur'), states('sensor.wlanthermo_kanal_5_temperatur'),
+        states('sensor.wlanthermo_kanal_4_temperatur'), states('sensor.wlanthermo_kanal_3_temperatur'),
+        states('sensor.wlanthermo_kanal_2_temperatur'), states('sensor.wlanthermo_kanal_1_temperatur')]%}\n\n{%
+        set param.high_tresh = [ states('number.wlanthermo_kanal_9_maximum'), states('number.wlanthermo_kanal_8_maximum'),
+        states('number.wlanthermo_kanal_7_maximum'), states('number.wlanthermo_kanal_6_maximum'),
+        states('number.wlanthermo_kanal_5_maximum'), states('number.wlanthermo_kanal_4_maximum'),
+        states('number.wlanthermo_kanal_3_maximum'), states('number.wlanthermo_kanal_2_maximum'),
+        states('number.wlanthermo_kanal_1_maximum')]%}\n{% set param.residual_time
+        = [ states('sensor.wlanthermo_kanal_9_restzeit') | float(9999), states('sensor.wlanthermo_kanal_8_restzeit')
+        | float(9999), states('sensor.wlanthermo_kanal_7_restzeit') | float(9999),
+        states('sensor.wlanthermo_kanal_6_restzeit') | float(9999), states('sensor.wlanthermo_kanal_5_restzeit')
+        | float(9999), states('sensor.wlanthermo_kanal_4_restzeit') | float(9999),
+        states('sensor.wlanthermo_kanal_3_restzeit') | float(9999), states('sensor.wlanthermo_kanal_2_restzeit')
+        | float(9999), states('sensor.wlanthermo_kanal_1_restzeit') | float(9999)]%}
+        {# {% set param.residual_time = [\"unavailable\"| float(9999), 31| float(9999),
+        30| float(9999), 29| float(9999), 28| float(9999), 6| float(9999), 5| float(9999),
+        4| float(9999),  1| float(9999)] %} #} {%for i in range(1,9)%} \n    {%if
+        (param.residual_time[-i] <= 60.0) and (param.residual_time[-i] != 0.0) %}\n
+        \      {%set data.continue = true %}\n      {%set data.sub_60min = data.sub_60min
+        + [i] %}\n    {%endif%} \n    {%if (param.residual_time[-i] <= 30.0) and (param.residual_time[-i]
+        != 0.0) %}\n      {%set data.sub_30min = data.sub_30min + [i] %}\n    {%endif%}\n
+        \   {%if (param.residual_time[-i] <= 15) and (param.residual_time[-i] != 0.0)
+        %}\n      {%set data.sub_15min = data.sub_15min + [i] %}\n    {%endif%}\n
+        \   {%if (param.residual_time[-i] <= 5) and (param.residual_time[-i] != 0.0)
+        %}\n      {%set data.sub_5min = data.sub_5min + [i] %}\n    {%endif%}\n{%endfor%}
+        {# {{param.residual_time}} {{ data}} #}\n\n{% if not data.sub_30min%}\n {%set
+        data.string = \"Keine Zeit Alarme aktiv\"  %}\n{%else%}\n {%set data.string
+        = \"\"  %}\n {%for i in data.sub_30min%}\n  {% if data.sub_30min[i-1] in data.sub_5min%}\n
+        \   {% set data.string = data.string ~  \"Ch \" ~ i ~ \" Zeit bis fertig:
+        \" ~ (param.residual_time[-i] | round(0, 'floor')) ~ \" min \" ~ (((param.residual_time[-i]
+        % 1) * 60) | round(0)) ~  \" s\\n\" %}\n  {%else%}\n    {% set data.string
+        = data.string ~  \"Ch \" ~ i ~ \" Zeit bis fertig: \" ~ (param.residual_time[-i]
+        | round(0, 'floor')) ~ \" min \" ~ (((param.residual_time[-i] % 1) * 60) |
+        round(0)) ~  \" s\\n\" %}\n  {%endif%}\n{%endfor%} {%endif%}\n{{ data.string}}"
+      data:
+        tag: wtherm_time_alarm_notification
+    enabled: true
+  mode: single
+
+- id: '1771075975027'
+  alias: 'WLANThermo: Low Battery'
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.wlanthermo_batteriestand
+    below: 20
+  conditions: []
+  actions:
+  - repeat:
+      until:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: sensor.wlanthermo_batteriestand
+          state:
+          - unavailable
+          - unknown
+          for:
+            hours: 0
+            minutes: 10
+            seconds: 0
+        - condition: state
+          entity_id: sensor.wlanthermo_ladevorgang_batterie
+          state:
+          - 'on'
+        - condition: numeric_state
+          entity_id: sensor.wlanthermo_batteriestand
+          above: 30
+      sequence:
+      - action: notify.notify_all_devices
+        metadata: {}
+        data:
+          message: clear_notification
+          data:
+            tag: wtherm_battery_alarm_notification
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 0
+          milliseconds: 250
+      - action: notify.notify_all_devices
+        metadata: {}
+        data:
+          title: WLANThermo
+          message: 'Wlanthermo niedriger Batteriestand: {{states(''sensor.wlanthermo_batteriestand'')}}%'
+          data:
+            tag: wtherm_battery_alarm_notification
+      - delay:
+          hours: 0
+          minutes: 3
+          seconds: 0
+          milliseconds: 0
+  mode: single
