@@ -183,6 +183,28 @@ class WlanthermoChannelTemperatureSensor(CoordinatorEntity, SensorEntity):
         return temp
 
     @property
+    def extra_state_attributes(self):
+        """
+        Additional channel alarm state.
+        """
+
+        channel = self._get_channel()
+        if not channel:
+            return None
+
+        low_alarm = getattr(channel, "low_alarm", None)
+        high_alarm = getattr(channel, "high_alarm", None)
+        min_temp = getattr(channel, "min", None)
+        max_temp = getattr(channel, "max", None)
+
+        return {
+            "low_temp_alarm": low_alarm,
+            "high_temp_alarm": high_alarm,
+            "min_temp": min_temp,
+            "max_temp": max_temp,
+        }
+
+    @property
     def available(self) -> bool:
         """
         Return True if the device is online and the channel is available and not marked as inactive.
@@ -1068,7 +1090,29 @@ class WlanthermoPitmasterTemperatureSensor(CoordinatorEntity, SensorEntity):
             if getattr(system, "unit", None) == "F"
             else UnitOfTemperature.CELSIUS
         )
-    
+
+    @property
+    def extra_state_attributes(self):
+        """
+        Additional channel alarm state.
+        """
+
+        channel = self._get_channel()
+        if not channel:
+            return None
+
+        low_alarm = getattr(channel, "low_alarm", None)
+        high_alarm = getattr(channel, "high_alarm", None)
+        min_temp = getattr(channel, "min", None)
+        max_temp = getattr(channel, "max", None)
+
+        return {
+            "low_temp_alarm": low_alarm,
+            "high_temp_alarm": high_alarm,
+            "min_temp": min_temp,
+            "max_temp": max_temp,
+        }
+
     @property
     def available(self) -> bool:
         """
