@@ -58,42 +58,68 @@ def _base_schema(*,user_input=None,defaults=None,include_device_name=False,inclu
 
     if include_device_name:
         schema[
-            vol.Required("device_name",default=user_input.get("device_name", defaults.get("device_name", "WLANThermo")))
+            vol.Required(
+                "device_name",
+                default=user_input.get("device_name", defaults.get("device_name", "WLANThermo")),
+                description={"translation_key": "device_name_description"},
+            )
         ] = str
 
     schema.update({
-        vol.Required(CONF_HOST,default=user_input.get(CONF_HOST, defaults.get(CONF_HOST, ""))): str,
-        vol.Required(CONF_PORT,default=user_input.get(CONF_PORT, defaults.get(CONF_PORT, 80))): int,
-        vol.Required(CONF_PATH_PREFIX,default=user_input.get(CONF_PATH_PREFIX, defaults.get(CONF_PATH_PREFIX, "/"))): str,
+        vol.Required(
+            CONF_HOST,
+            default=user_input.get(CONF_HOST, defaults.get(CONF_HOST, "")),
+            description={"translation_key": "host_description"},
+        ): str,
+
+        vol.Required(
+            CONF_PORT,
+            default=user_input.get(CONF_PORT, defaults.get(CONF_PORT, 80)),
+            description={"translation_key": "port_description"},
+        ): int,
+
+        vol.Required(
+            CONF_PATH_PREFIX,
+            default=user_input.get(CONF_PATH_PREFIX, defaults.get(CONF_PATH_PREFIX, "/")),
+            description={"translation_key": "path_prefix_description"},
+        ): str,
     })
 
     if include_scan_interval:
         schema[
-            vol.Required("scan_interval",default=user_input.get("scan_interval", defaults.get("scan_interval", 10)))
+            vol.Required(
+                "scan_interval",
+                default=user_input.get("scan_interval", defaults.get("scan_interval", 10)),
+                description={"translation_key": "scan_interval_description"},
+            )
         ] = int
 
     schema.update({
         vol.Required(
             "show_inactive_unavailable",
-            default=user_input.get("show_inactive_unavailable",defaults.get("show_inactive_unavailable", True)),
-            description={"translation_key": "show_inactive_unavailable"},
+            default=user_input.get("show_inactive_unavailable", defaults.get("show_inactive_unavailable", True)),
+            description={"translation_key": "show_inactive_unavailable_description"},
         ): BooleanSelector({}),
+
         vol.Required(
             "auth_required",
             default=user_input.get("auth_required", defaults.get("auth_required", False)),
-            description={"translation_key": "auth_required"},
+            description={"translation_key": "auth_required_description"},
         ): BooleanSelector({}),
+
         vol.Optional(
             "username",
             default=user_input.get("username", ""),
-            description={"translation_key": "username_optional"},
+            description={"translation_key": "username_description"},
         ): str,
+
         vol.Optional(
             "password",
             default=user_input.get("password", ""),
-            description={"translation_key": "password_optional"},
+            description={"translation_key": "password_description"},
         ): str,
     })
+
 
     return vol.Schema(schema)
 

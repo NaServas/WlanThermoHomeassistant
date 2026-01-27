@@ -7,15 +7,25 @@
         "description": "Enter connection details for your WLANThermo device.",
         "data": {
           "device_name": "Device Name",
+          "device_name_description": "Name of the WLANThermo device.",
           "host": "Host / IP Address",
+          "host_description": "Address of the WLANThermo device.",
           "port": "Port",
+          "port_description": "Port of the WLANThermo device.",
           "path_prefix": "Path Prefix",
+          "path_prefix_description": "Path prefix for the device API.",
+          "scan_interval": "Polling Interval (seconds)",
+          "scan_interval_description": "How often the device is polled.",
           "show_inactive_unavailable": "Show inactive sensors as unavailable",
+          "show_inactive_unavailable_description": "Displays inactive sensors as unavailable.",
           "auth_required": "Authentication required",
+          "auth_required_description": "Enables authentication for the device.",
           "username": "Username",
           "username_optional": "Username (only enter if authentication is required)",
+          "username_description": "Username for authentication.",
           "password": "Password",
-          "password_optional": "Password (only enter if authentication is required)"
+          "password_optional": "Password (only enter if authentication is required)",
+          "password_description": "Password for authentication."
         }
       }
     },
@@ -28,16 +38,26 @@
       "init": {
         "title": "WLANThermo Options",
         "data": {
+          "device_name": "Device Name",
+          "device_name_description": "Name of the WLANThermo device.",
           "host": "Host / IP Address",
+          "host_description": "Address of the WLANThermo device.",
           "port": "Port",
+          "port_description": "Port of the WLANThermo device.",
           "path_prefix": "Path Prefix",
+          "path_prefix_description": "Path prefix for the device API.",
+          "scan_interval": "Polling Interval (seconds)",
+          "scan_interval_description": "How often the device is polled.",
           "show_inactive_unavailable": "Show inactive sensors as unavailable",
+          "show_inactive_unavailable_description": "Displays inactive sensors as unavailable.",
           "auth_required": "Authentication required",
+          "auth_required_description": "Enables authentication for the device.",
           "username": "Username",
           "username_optional": "Username (only enter if authentication is required)",
+          "username_description": "Username for authentication.",
           "password": "Password",
           "password_optional": "Password (only enter if authentication is required)",
-          "scan_interval": "Scan Interval (seconds)"
+          "password_description": "Password for authentication."
         }
       }
     }

@@ -7,15 +7,25 @@
         "description": "Geben Sie die Verbindungsdaten für Ihr WLANThermo Gerät ein.",
         "data": {
           "device_name": "Gerätename",
+          "device_name_description": "Name des WLANThermo Geräts.",
           "host": "Host / IP-Adresse",
+          "host_description": "Adresse des WLANThermo Geräts.",
           "port": "Port",
+          "port_description": "Port des WLANThermo Geräts.",
           "path_prefix": "Pfad-Präfix",
+          "path_prefix_description": "Pfadpräfix für die API des Geräts.",
+          "scan_interval": "Abfrage-Intervall (Sekunden)",
+          "scan_interval_description": "Wie oft das Gerät abgefragt wird.",
           "show_inactive_unavailable": "Inaktive Sensoren als nicht verfügbar anzeigen",
+          "show_inactive_unavailable_description": "Zeigt inaktive Sensoren als nicht verfügbar an.",
           "auth_required": "Authentifizierung erforderlich",
+          "auth_required_description": "Aktiviert die Authentifizierung für das Gerät.",
           "username": "Benutzername",
           "username_optional": "Benutzername (nur eingeben wenn Authentifizierung erforderlich ist)",
+          "username_description": "Benutzername für die Authentifizierung.",
           "password": "Passwort",
-          "password_optional": "Passwort (nur eingeben wenn Authentifizierung erforderlich ist)"
+          "password_optional": "Passwort (nur eingeben wenn Authentifizierung erforderlich ist)",
+          "password_description": "Passwort für die Authentifizierung."
         }
       }
     },
@@ -27,19 +37,33 @@
     "step": {
       "init": {
         "title": "WLANThermo Optionen",
+        "description": "Geben Sie die Verbindungsdaten für Ihr WLANThermo Gerät ein.",
         "data": {
+          "device_name": "Gerätename",
+          "device_name_description": "Name des WLANThermo Geräts.",
           "host": "Host / IP-Adresse",
+          "host_description": "Adresse des WLANThermo Geräts.",
           "port": "Port",
+          "port_description": "Port des WLANThermo Geräts.",
           "path_prefix": "Pfad-Präfix",
+          "path_prefix_description": "Pfadpräfix für die API des Geräts.",
+          "scan_interval": "Abfrage-Intervall (Sekunden)",
+          "scan_interval_description": "Wie oft das Gerät abgefragt wird.",
           "show_inactive_unavailable": "Inaktive Sensoren als nicht verfügbar anzeigen",
+          "show_inactive_unavailable_description": "Zeigt inaktive Sensoren als nicht verfügbar an.",
           "auth_required": "Authentifizierung erforderlich",
+          "auth_required_description": "Aktiviert die Authentifizierung für das Gerät.",
           "username": "Benutzername",
           "username_optional": "Benutzername (nur eingeben wenn Authentifizierung erforderlich ist)",
+          "username_description": "Benutzername für die Authentifizierung.",
           "password": "Passwort",
           "password_optional": "Passwort (nur eingeben wenn Authentifizierung erforderlich ist)",
-          "scan_interval": "Abfrage-Intervall (Sekunden)"
+          "password_description": "Passwort für die Authentifizierung."
         }
       }
+    },
+    "error": {
+      "required": "Dieses Feld ist erforderlich."
     }
   }, 
     "alarm": {
@@ -115,6 +139,5 @@
       "pidprofile_opl": {"name": "PID-Profil {profile_id} Deckelerkennung"},
       "pidprofile_link": {"name": "PID-Profil {profile_id} Aktor-Verknüpfung"}
     }
-
   }
 }
