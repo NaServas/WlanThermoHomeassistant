@@ -157,7 +157,7 @@ class WlanthermoPidProfileNameText(CoordinatorEntity, TextEntity):
     async def async_set_value(self, value: str):
         for p in self.coordinator.api.settings.pid:
             if p.id == self._profile_id:
-                setattr(p, self._field, value)
+                p.name = value
                 payload = p.to_full_payload()
                 success = await self.coordinator.api.async_set_pid_profile(
                     [payload],
