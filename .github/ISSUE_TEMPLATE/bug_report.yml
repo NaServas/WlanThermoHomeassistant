@@ -1,0 +1,62 @@
+name: "Bug report / Fehlerbericht"
+description: "Report a problem with the WLANThermo Home Assistant integration. / Melden Sie ein Problem mit der WLANThermo Home Assistant Integration."
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report / Fehlerbericht
+        Please fill out the information below to help us reproduce and fix the issue. / Bitte füllen Sie die folgenden Felder aus, damit wir das Problem nachvollziehen und beheben können.
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: "Home Assistant version / Home Assistant Version"
+      description: "What version of Home Assistant are you running? (e.g., 2024.1.0) / Welche Version von Home Assistant verwenden Sie? (z.B. 2024.1.0)"
+      placeholder: "2024.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: component_version
+    attributes:
+      label: "WLANThermo integration version / WLANThermo Integrationsversion"
+      description: "What version/commit of the integration are you using? (e.g., v1.2.3 or commit hash) / Welche Version/Commit der Integration verwenden Sie? (z.B. v1.2.3 oder Commit-Hash)"
+      placeholder: "v1.2.3"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Describe the bug / Fehlerbeschreibung"
+      description: "A clear and concise description of what the bug is. / Eine klare und präzise Beschreibung des Fehlers."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to reproduce / Schritte zur Reproduktion"
+      description: "How can we reproduce the issue? / Wie können wir das Problem nachstellen?"
+      placeholder: "1. Go to ...\n2. Click on ...\n3. See error / 1. Gehe zu ...\n2. Klicke auf ...\n3. Fehler erscheint"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Relevant logs / Relevante Logs"
+      description: "Paste any relevant error messages or logs here. / Fügen Sie hier relevante Fehlermeldungen oder Logs ein."
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: "Additional information / Weitere Informationen"
+      description: "Add any other context about the problem here. / Fügen Sie hier weitere Informationen zum Problem hinzu."
+    validations:
+      required: false
