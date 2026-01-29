@@ -144,7 +144,7 @@
       "telegram_enabled": {"name": "Push Telegram Active"},
       "pushover_enabled": {"name": "Push Pushover Active"},
       "bluetooth_enabled": {"name": "Bluetooth Active"},
-      "bluetooth_probe": {"name": "Bluetooth Probe {probe}"}
+      "bluetooth_probe": {"name": "Bluetooth {name} Probe {probe}"}
     },
     "button": {
       "telegram_test": {"name": "Push Telegram Test"},

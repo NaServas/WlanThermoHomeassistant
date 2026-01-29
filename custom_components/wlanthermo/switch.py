@@ -404,7 +404,8 @@ class WlanthermoBluetoothProbeSwitch(CoordinatorEntity, SwitchEntity):
         self._attr_device_info = entry_data["device_info"]
         self._attr_translation_key = "bluetooth_probe"
         self._attr_translation_placeholders = {
-            "probe": str(self._probe + 1)
+            "probe": str(self._probe + 1),
+            "name": self._address.replace(":", "")[-6:],
         }
 
     def _get_device(self) -> dict | None:
