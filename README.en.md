@@ -1,6 +1,6 @@
 # WLANThermo – Home Assistant Integration
 
-![Version](https://img.shields.io/badge/version-0.2.3-informational)
+![Version](https://img.shields.io/badge/version-0.3.0-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025%2B-blue)
 [![Support](https://img.shields.io/badge/support-WLANThermo%20Forum-lightgrey)](https://wlanthermo.de/forums/)
@@ -178,6 +178,19 @@ Access options via:
   - Cloud URL
   - Device & system information
 
+### Notification
+- Configuration
+  - Activate notification (Telegram/Pushover)
+  - Enter Token (Telegram/Pushover)
+  - User Key / Chat ID (Telegram/Pushover)
+  - Set Message priority (Pushover)
+  - Send test message (Telegram/Pushover)
+
+### Bluetooth
+- Configuration
+  - Activate Bluetooth
+  - Selection of available Channels
+
 ---
 
 ## Sensor: Time Left
@@ -201,11 +214,16 @@ Behavior
 
 Ideal for grilling & cooking processes 🔥
 
+## Notification Configuration
+
+To set up Telegram or Pushover, you need a token and a Chat ID/User key. Instructions for setting these up can be found at [Push-Notification](https://github.com/WLANThermo-nano/WLANThermo_ESP32_Software/wiki/Push-Notification).
+You can only test the notification if both text fields are filled in.
+
 ---
 
 ## API Notes
 
-- Official HTTP API:  
+- Official HTTP API: (Nano V1(+) are almost the same)  
   https://github.com/WLANThermo-nano/WLANThermo_ESP32_Software/wiki/HTTP
 
 ---
