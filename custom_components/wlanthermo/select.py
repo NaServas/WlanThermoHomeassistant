@@ -1,6 +1,6 @@
 """
 Select platform for WLANThermo adjustable values.
-Exposes probe type, alarm mode, pitmaster state, PID profile, and channel as Home Assistant select entities.
+Exposes probe type, alarm mode, pitmaster state, Pushover Priority, PID profile, and channel as Home Assistant select entities.
 """
 
 from homeassistant.helpers.entity import EntityCategory
@@ -13,6 +13,18 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 ALARM_OPTIONS = ["off", "push", "buzzer", "push_buzzer"]
+
+PUSHOVER_PRIORITY_OPTIONS = ["normal", "high", "emergency"]
+PUSHOVER_PRIORITY_MAP = {
+    "normal": 0,
+    "high": 1,
+    "emergency": 2,
+}
+PUSHOVER_PRIORITY_REVERSE = {
+    0: "normal",
+    1: "high",
+    2: "emergency",
+}
 
 PITMASTER_SELECT_FIELDS = [
     {
@@ -43,6 +55,8 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
     entity_store.setdefault("channel_selects", set())
     entity_store.setdefault("pitmaster_selects", set())
     entity_store.setdefault("pidprofile_selects", set())
+    entity_store.setdefault("pushover_selects", set())
+
     settings = getattr(coordinator.api, 'settings', None)
     sensor_types: list[str] = []
     sensor_type_map: dict[str, int] = {}
@@ -175,6 +189,12 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
                         )
                     )
                 entity_store["pitmaster_selects"].add(pm_id)
+        if "pushover_priority" not in entity_store["pushover_selects"]:
+            new_entities.append(
+                WlanthermoPushoverPrioritySelect(coordinator, entry_data)
+            )
+            entity_store["pushover_selects"].add("pushover_priority")
+
         if new_entities:
             async_add_entities(new_entities)
     await _async_discover_selects()
@@ -509,4 +529,47 @@ class WlanthermoPidProfileSelect(CoordinatorEntity, SelectEntity):
                     await self.coordinator.async_request_refresh()
                 return
 
-            
+
+class WlanthermoPushoverPrioritySelect(CoordinatorEntity, SelectEntity):
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:priority-high"
+    _attr_translation_key = "pushover_priority"
+    _attr_options = ["normal", "high", "emergency"]
+
+    def __init__(self, coordinator, entry_data):
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_pushover_priority"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def available(self) -> bool:
+        data = self.coordinator.data
+        return bool(
+            data
+            and data.push
+            and data.push.pushover.token
+            and data.push.pushover.user_key
+        )
+
+    @property
+    def current_option(self) -> str | None:
+        data = self.coordinator.data
+        if not data or not data.push:
+            return None
+        return PUSHOVER_PRIORITY_REVERSE.get(
+            data.push.pushover.priority
+        )
+
+    async def async_select_option(self, option: str) -> None:
+        pushover = self.coordinator.data.push.pushover
+        pushover.priority = PUSHOVER_PRIORITY_MAP[option]
+
+        success = await self.coordinator.api.async_set_push({
+            "pushover": pushover.to_payload(),
+        })
+
+        if success:
+            await self.coordinator.async_request_refresh()

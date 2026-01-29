@@ -88,6 +88,26 @@ class WLANThermoApi:
         """
         return await self._get("/info")
 
+    async def get_bluetooth(self) -> dict | None:
+        """
+        Fetch bluetooth info (if available).
+        Returns:
+            JSON data or None.
+        """
+        return await self._get("/getbluetooth")
+
+    async def get_push(self) -> dict | None:
+        """
+        Fetch push info (if available).
+        Returns:
+            JSON data or None.
+            {"telegram":{"enabled":true,"token":"","chat_id":""},
+             "pushover":{"enabled":false,"token":"","user_key":"","priority":0},
+             "app":{"enabled":false,"max_devices":3,"devices":[]}
+            }
+        """
+        return await self._get("/getpush")
+    
     async def _request(self, method: str, endpoint: str, json: dict | None = None) -> tuple[int | None, str | None]:
         """
         Perform an HTTP request to the specified endpoint.
@@ -152,3 +172,30 @@ class WLANThermoApi:
         status, text = await self._request(method, "/setpid", pid_data)
         return status == 200 and text and text.strip().lower() == "true"
 
+    async def async_set_bluetooth(self, bluetooth_data: dict, method: str = "POST") -> bool:
+        """
+        Send Bluetooth configuration to the device.
+        Args:
+            bluetooth_data: Dictionary with Bluetooth configuration. --> {enabled: true, devices: []}
+            method: HTTP method ('POST' or 'PUT').
+        Returns:
+            True if successful, False otherwise.
+        """
+        status, text = await self._request(method, "/setbluetooth", bluetooth_data)
+        return status == 200 and text and text.strip().lower() == "true"
+    
+    async def async_set_push(self, push_data: dict, method: str = "POST") -> bool:
+        """
+        Send push notification configuration to the device.
+        Args:
+            push_data: Dictionary with push notification configuration. 
+            --> {"telegram":{"enabled":true,"token":"","chat_id":""},
+                 "pushover":{"enabled":false,"token":"","user_key":"","priority":0},
+                 "app":{"enabled":false,"max_devices":3,"devices":[]}
+                }
+            method: HTTP method ('POST' or 'PUT').
+        Returns:
+            True if successful, False otherwise.
+        """
+        status, text = await self._request(method, "/setpush", push_data)
+        return status == 200 and text and text.strip().lower() == "true"

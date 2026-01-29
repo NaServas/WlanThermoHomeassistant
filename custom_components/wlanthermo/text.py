@@ -31,6 +31,7 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
     entity_store = entry_data.setdefault("entities", {})
     entity_store.setdefault("text_channels", set())
     entity_store.setdefault("text_pidprofiles", set())
+    entity_store.setdefault("text_push", set())
 
     async def _async_discover_entities() -> None:
         """
@@ -59,6 +60,25 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
                     )
                 )
                 entity_store["text_pidprofiles"].add(pid_id)
+        if coordinator.data.push:
+            if "telegram" not in entity_store["text_push"]:
+                new_entities.extend(
+                    [
+                        WlanthermoTelegramTokenText(coordinator, entry_data),
+                        WlanthermoTelegramChatIdText(coordinator, entry_data),
+                    ]
+                )
+                entity_store["text_push"].add("telegram")
+
+            if "pushover" not in entity_store["text_push"]:
+                new_entities.extend(
+                    [
+                        WlanthermoPushoverTokenText(coordinator, entry_data),
+                        WlanthermoPushoverUserKeyText(coordinator, entry_data),
+                    ]
+                )
+                entity_store["text_push"].add("pushover")
+
         if new_entities:
             async_add_entities(new_entities)
     coordinator.async_add_listener(_async_discover_entities)
@@ -202,3 +222,132 @@ class WlanthermoPidProfileNameText(CoordinatorEntity, TextEntity):
                 if success:
                     await self.coordinator.async_request_refresh()
                 return
+
+class WlanthermoTelegramTokenText(CoordinatorEntity, TextEntity):
+    """Text entity for Telegram bot token."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:cloud-key-outline"
+    _attr_native_min = 0
+    _attr_native_max = 128
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "telegram_token"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_telegram_token"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.push.telegram.token
+
+    async def async_set_value(self, value: str) -> None:
+        telegram = self.coordinator.data.push.telegram
+        telegram.token = value
+
+        success = await self.coordinator.api.async_set_push({
+            "telegram": telegram.to_payload(),
+        })
+
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+
+
+class WlanthermoTelegramChatIdText(CoordinatorEntity, TextEntity):
+    """Text entity for Telegram chat ID."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:chat-plus"
+    _attr_native_min = 0
+    _attr_native_max = 32
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "telegram_chat_id"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_telegram_chat_id"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.push.telegram.chat_id
+
+    async def async_set_value(self, value: str) -> None:
+        telegram = self.coordinator.data.push.telegram
+        telegram.chat_id = value
+        success = await self.coordinator.api.async_set_push({
+            "telegram": telegram.to_payload(),
+        })
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+class WlanthermoPushoverTokenText(CoordinatorEntity, TextEntity):
+    """
+    Text entity for Pushover application token.
+    """
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:cloud-key-outline"
+    _attr_native_min = 0
+    _attr_native_max = 64
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "pushover_token"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_pushover_token"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.push.pushover.token
+
+    async def async_set_value(self, value: str) -> None:
+        pushover = self.coordinator.data.push.pushover
+        pushover.token = value
+        success = await self.coordinator.api.async_set_push({
+            "pushover": pushover.to_payload(),
+        })
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+class WlanthermoPushoverUserKeyText(CoordinatorEntity, TextEntity):
+    """
+    Text entity for Pushover user key.
+    """
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:account-key"
+    _attr_native_min = 0
+    _attr_native_max = 64
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "pushover_user_key"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_pushover_user_key"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.push.pushover.user_key
+
+    async def async_set_value(self, value: str) -> None:
+        pushover = self.coordinator.data.push.pushover
+        pushover.user_key = value
+        success = await self.coordinator.api.async_set_push({
+            "pushover": pushover.to_payload(),
+        })
+        if success:
+            await self.coordinator.async_request_refresh()

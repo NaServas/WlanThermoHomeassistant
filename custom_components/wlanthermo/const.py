@@ -5,7 +5,7 @@ Defines domain, config keys, and alarm mode mappings.
 """
 
 # Supported platforms for the integration
-PLATFORMS: list[str] = ["light", "number", "select", "sensor", "switch", "text"]
+PLATFORMS: list[str] = ["button", "light", "number", "select", "sensor", "switch", "text"]
 
 # Integration domain string
 DOMAIN = "wlanthermo"

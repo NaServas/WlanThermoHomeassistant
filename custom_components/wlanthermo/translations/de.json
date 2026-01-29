@@ -129,15 +129,28 @@
       "pitmaster_channel": {"name": "Pitmaster {pitmaster_number} Kanal"},
       "pidprofile_aktor": {"name": "PID-Profil {profile_id} Aktor",
               "options": {"SSR": "SSR","FAN": "Lüfter","SERVO": "Servo","DAMPER": "Klappe"}
-          }
+          },
+      "pushover_priority": {"name": "Push Pushover Priorität",
+                 "options": {"normal": "Normal","high": "Hoch","emergency": "Notfall"}
+              }
     },
     "text": {
       "channel_name": {"name": "Kanal {channel_number} Name"},
-      "pidprofile_name": {"name": "PID-Profil {profile_id} Name"}
+      "pidprofile_name": {"name": "PID-Profil {profile_id} Name"},
+      "telegram_token": {"name": "Push Telegram Token"},
+      "telegram_chat_id": {"name": "Push Telegram Chat ID"},
+      "pushover_token": {"name": "Push Pushover Token"},
+      "pushover_user_key": {"name": "Push Pushover User Key"}
     },
     "switch": {
       "pidprofile_opl": {"name": "PID-Profil {profile_id} Deckelerkennung"},
-      "pidprofile_link": {"name": "PID-Profil {profile_id} Aktor-Verknüpfung"}
+      "pidprofile_link": {"name": "PID-Profil {profile_id} Aktor-Verknüpfung"},
+      "telegram_enabled": {"name": "Push Telegram Aktiv"},
+      "pushover_enabled": {"name": "Push Pushover Aktiv"}
+    },
+    "button": {
+      "telegram_test": {"name": "Push Telegram Testen"},
+      "pushover_test": {"name": "Push Pushover Testen"}
     }
   }
 }

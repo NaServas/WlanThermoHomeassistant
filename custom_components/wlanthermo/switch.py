@@ -23,6 +23,7 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
     coordinator = entry_data["coordinator"]
     entity_store = entry_data.setdefault("entities", {})
     entity_store.setdefault("pidprofile_switch", set())
+    entity_store.setdefault("push_switch", set())
 
     async def _async_discover_entities() -> None:
         """
@@ -48,6 +49,14 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
                         )
                     )
                     entity_store["pidprofile_switch"].add(unique_key)
+        for key, cls in (
+            ("telegram_enabled", WlanthermoTelegramEnabledSwitch),
+            ("pushover_enabled", WlanthermoPushoverEnabledSwitch),
+        ):
+            if key not in entity_store["push_switch"]:
+                new_entities.append(cls(coordinator, entry_data))
+                entity_store["push_switch"].add(key)
+
         if new_entities:
             async_add_entities(new_entities)
     coordinator.async_add_listener(_async_discover_entities)
@@ -227,3 +236,85 @@ class WlanthermoPidProfileLinkSwitch(CoordinatorEntity, SwitchEntity):
                 if success:
                     await self.coordinator.async_request_refresh()
                 return
+            
+class WlanthermoTelegramEnabledSwitch(CoordinatorEntity, SwitchEntity):
+    """Switch to enable or disable Telegram push notifications."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:facebook-messenger"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "telegram_enabled"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_telegram_enabled"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.data.push is not None
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self.coordinator.data.push.telegram.enabled)
+
+    async def async_turn_on(self, **kwargs) -> None:
+        await self._async_write(True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        await self._async_write(False)
+
+    async def _async_write(self, enabled: bool) -> None:
+        telegram = self.coordinator.data.push.telegram
+        telegram.enabled = enabled
+
+        payload = {
+            "telegram": telegram.to_payload(),
+        }
+
+        success = await self.coordinator.api.async_set_push(payload)
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+class WlanthermoPushoverEnabledSwitch(CoordinatorEntity, SwitchEntity):
+    """Enable/disable Pushover push notifications."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:bell"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "pushover_enabled"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_pushover_enabled"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.data.push is not None
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self.coordinator.data.push.pushover.enabled)
+
+    async def async_turn_on(self, **kwargs) -> None:
+        await self._async_write(True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        await self._async_write(False)
+
+    async def _async_write(self, enabled: bool) -> None:
+        pushover = self.coordinator.data.push.pushover
+        pushover.enabled = enabled
+
+        payload = {
+            "pushover": pushover.to_payload()
+        }
+        success = await self.coordinator.api.async_set_push(payload)
+        if success:
+            await self.coordinator.async_request_refresh()

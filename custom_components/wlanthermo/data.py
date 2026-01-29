@@ -16,6 +16,7 @@ class WlanthermoData:
         self,
         raw: Dict[str, Any] | None = None,
         settings: "SettingsData" | None = None,
+        push: "PushSettings" | None = None,
         **kwargs,
     ):
         """
@@ -23,10 +24,12 @@ class WlanthermoData:
         Args:
             raw: Raw dictionary from /data endpoint.
             settings: Optional SettingsData object.
+            push: Optional PushSettings object.
             **kwargs: Additional keyword arguments.
         """
         import copy
         self.settings: SettingsData | None = settings
+        self.push: PushSettings | None = push
         if raw:
             self.channels: list[Channel] = [
                 Channel(copy.deepcopy(c)) for c in raw.get("channel", [])
@@ -226,16 +229,6 @@ class PIDConfig:
     def supports_link(self):
         return self.aktor == AKTOR_DAMPER
 
-    @staticmethod
-    def parse_bool(value: Any) -> bool:
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, (int, float)):
-            return value != 0
-        if isinstance(value, str):
-            return value.lower() in ("1", "true", "yes", "on")
-        return False
-
     def __init__(self, data: Dict[str, Any]):
         """
         Initialize PIDConfig with PID controller configuration.
@@ -250,11 +243,11 @@ class PIDConfig:
         self.Kd: float = float(data.get("Kd", 0.0))
         self.DCmmin: int = int(data.get("DCmmin", 0))
         self.DCmmax: int = int(data.get("DCmmax", 0))
-        self.opl: bool = self.parse_bool(data.get("opl", False))
+        self.opl: bool = parse_bool(data.get("opl", False))
         self.SPmin: int = int(data.get("SPmin", 0))
         self.SPmax: int = int(data.get("SPmax", 0))
         self.link: int = int(data.get("link", 0))
-        self.tune: bool = self.parse_bool(data.get("tune", False))
+        self.tune: bool = parse_bool(data.get("tune", False))
         self.jp: int = int(data.get("jp", 0))
 
     def aktor_name(self, aktor_map: list[str]) -> str:
@@ -379,3 +372,94 @@ class SettingsData:
         Parse a JSON dict into a SettingsData object.
         """
         return cls(data)
+
+class PushTelegramSettings:
+    """Telegram push notification settings."""
+    def __init__(self, data: dict):
+        self.enabled: bool = parse_bool(data.get("enabled", False))
+        self.token: str = str(data.get("token", ""))
+        self.chat_id: str = str(data.get("chat_id", ""))
+        self.test: bool = parse_bool(data.get("test", False))
+
+    def to_payload(self) -> dict:
+        return {
+            "enabled": int(self.enabled),
+            "token": self.token,
+            "chat_id": self.chat_id,
+            "test": int(self.test),
+        }
+
+class PushPushoverSettings:
+    """Pushover push notification settings."""
+    def __init__(self, data: dict):
+        self.enabled: bool = parse_bool(data.get("enabled", False))
+        self.token: str = str(data.get("token", ""))
+        self.user_key: str = str(data.get("user_key", ""))
+        self.priority: int = int(data.get("priority", 0))
+
+    def to_payload(self) -> dict:
+        return {
+            "enabled": int(self.enabled),
+            "token": self.token,
+            "user_key": self.user_key,
+            "priority": self.priority,
+        }
+
+class PushAppSettings:
+    """App push notification settings."""
+    def __init__(self, data: dict):
+        self.enabled: bool = parse_bool(data.get("enabled", False))
+        self.max_devices: int = int(data.get("max_devices", 0))
+        self.devices: list = list(data.get("devices", []))
+
+    def to_payload(self) -> dict:
+        return {
+            "enabled": int(self.enabled),
+            "max_devices": self.max_devices,
+            "devices": self.devices,
+        }
+
+class PushSettings:
+    """Push notification settings from /getpush or /setpush."""
+    def __init__(self, data: dict):
+        self.telegram = PushTelegramSettings(data.get("telegram", {}))
+        self.pushover = PushPushoverSettings(data.get("pushover", {}))
+        self.app = PushAppSettings(data.get("app", {}))
+
+    @classmethod
+    def from_json(cls, data: dict) -> "PushSettings":
+        return cls(data)
+
+    def to_payload(self) -> dict:
+        return {
+            "telegram": self.telegram.to_payload(),
+            "pushover": self.pushover.to_payload(),
+            "app": self.app.to_payload(),
+        }
+    
+class BluetoothSettings:
+    """Bluetooth settings from /getbluetooth or /setbluetooth."""
+    def __init__(self, data: dict):
+        self.enabled: bool = parse_bool(data.get("enabled", False))
+        self.devices: list = list(data.get("devices", []))
+
+    @classmethod
+    def from_json(cls, data: dict) -> "BluetoothSettings":
+        return cls(data)
+
+    def to_payload(self) -> dict:
+        return {
+            "enabled": int(self.enabled),
+            "devices": self.devices,
+        }
+
+@staticmethod
+def parse_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        return value.lower() in ("1", "true", "yes", "on")
+    return False
+
