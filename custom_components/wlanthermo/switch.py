@@ -24,6 +24,7 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
     entity_store = entry_data.setdefault("entities", {})
     entity_store.setdefault("pidprofile_switch", set())
     entity_store.setdefault("push_switch", set())
+    entity_store.setdefault("bluetooth_switch", set())
 
     async def _async_discover_entities() -> None:
         """
@@ -56,6 +57,33 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
             if key not in entity_store["push_switch"]:
                 new_entities.append(cls(coordinator, entry_data))
                 entity_store["push_switch"].add(key)
+        bluetooth = getattr(coordinator.data, "bluetooth", None)
+        if (
+            bluetooth
+            and "bluetooth_enabled" not in entity_store["bluetooth_switch"]
+        ):
+            new_entities.append(
+                WlanthermoBluetoothEnabledSwitch(coordinator, entry_data)
+            )
+            entity_store["bluetooth_switch"].add("bluetooth_enabled")
+            for dev in bluetooth.devices:
+                address = dev.get("address")
+                count = int(dev.get("count", 0))
+
+                for probe in range(count):
+                    key = f"{address}_{probe}"
+                    if key in entity_store["bluetooth_switch"]:
+                        continue
+
+                    new_entities.append(
+                        WlanthermoBluetoothProbeSwitch(
+                            coordinator,
+                            entry_data,
+                            address=address,
+                            probe_index=probe,
+                        )
+                    )
+                    entity_store["bluetooth_switch"].add(key)
 
         if new_entities:
             async_add_entities(new_entities)
@@ -318,3 +346,119 @@ class WlanthermoPushoverEnabledSwitch(CoordinatorEntity, SwitchEntity):
         success = await self.coordinator.api.async_set_push(payload)
         if success:
             await self.coordinator.async_request_refresh()
+
+
+class WlanthermoBluetoothEnabledSwitch(CoordinatorEntity, SwitchEntity):
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:bluetooth"
+
+    def __init__(self, coordinator, entry_data):
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_bluetooth_enabled"
+        )
+        self._attr_device_info = entry_data["device_info"]
+        self._attr_translation_key = "bluetooth_enabled"
+
+    @property
+    def is_on(self) -> bool:
+        data = self.coordinator.data
+        return bool(data and data.bluetooth and data.bluetooth.enabled)
+
+    async def async_turn_on(self, **kwargs) -> None:
+        bt = self.coordinator.data.bluetooth
+        if not bt:
+            return
+        bt.enabled = True
+        await self._push()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        bt = self.coordinator.data.bluetooth
+        if not bt:
+            return
+        bt.enabled = False
+        await self._push()
+
+    async def _push(self) -> None:
+        success = await self.coordinator.api.async_set_bluetooth(
+            self.coordinator.data.bluetooth.to_payload()
+        )
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+class WlanthermoBluetoothProbeSwitch(CoordinatorEntity, SwitchEntity):
+    """Enable/disable individual Bluetooth probes."""
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:thermometer-bluetooth"
+
+    def __init__(self, coordinator, entry_data, address: str, probe_index: int):
+        super().__init__(coordinator)
+        self._address = address
+        self._probe = probe_index
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_bt_{address}_probe_{probe_index+1}"
+        )
+        self._attr_device_info = entry_data["device_info"]
+        self._attr_translation_key = "bluetooth_probe"
+        self._attr_translation_placeholders = {
+            "probe": str(self._probe + 1)
+        }
+
+    def _get_device(self) -> dict | None:
+        data = self.coordinator.data
+        if not data or not data.bluetooth:
+            return None
+        for dev in data.bluetooth.devices:
+            if dev.get("address") == self._address:
+                return dev
+        return None
+
+    @property
+    def is_on(self) -> bool:
+        dev = self._get_device()
+        if not dev:
+            return False
+        return is_bit_set(dev.get("selected", 0), self._probe)
+    @property
+    def available(self) -> bool:
+        data = self.coordinator.data
+        if not data or not data.bluetooth or not data.bluetooth.enabled:
+            return False
+        return self._get_device() is not None
+
+    async def async_turn_on(self, **kwargs) -> None:
+        dev = self._get_device()
+        if not dev:
+            return
+        dev["selected"] = set_bit(dev.get("selected", 0), self._probe)
+        await self._push()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        dev = self._get_device()
+        if not dev:
+            return
+        dev["selected"] = clear_bit(dev.get("selected", 0), self._probe)
+        await self._push()
+
+    async def _push(self) -> None:
+        bluetooth = self.coordinator.data.bluetooth
+        if not bluetooth:
+            return
+        success = await self.coordinator.api.async_set_bluetooth(
+            bluetooth.to_payload()
+        )
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+def is_bit_set(mask: int, bit: int) -> bool:
+    return bool(mask & (1 << bit))
+
+def set_bit(mask: int, bit: int) -> int:
+    return mask | (1 << bit)
+
+def clear_bit(mask: int, bit: int) -> int:
+    return mask & ~(1 << bit)

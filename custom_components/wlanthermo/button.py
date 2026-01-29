@@ -34,10 +34,7 @@ async def async_setup_entry(
         """
         if not coordinator.data:
             return
-
         new_entities = []
-
-                # Telegram test button
         key = "telegram_test"
         if key not in entity_store["buttons"]:
             new_entities.append(
@@ -47,8 +44,6 @@ async def async_setup_entry(
                 )
             )
             entity_store["buttons"].add(key)
-
-        # Pushover test button
         key = "pushover_test"
         if key not in entity_store["buttons"]:
             new_entities.append(

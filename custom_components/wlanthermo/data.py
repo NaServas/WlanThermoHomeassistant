@@ -17,6 +17,7 @@ class WlanthermoData:
         raw: Dict[str, Any] | None = None,
         settings: "SettingsData" | None = None,
         push: "PushSettings" | None = None,
+        bluetooth: "BluetoothSettings" | None = None,
         **kwargs,
     ):
         """
@@ -25,11 +26,13 @@ class WlanthermoData:
             raw: Raw dictionary from /data endpoint.
             settings: Optional SettingsData object.
             push: Optional PushSettings object.
+            bluetooth: Optional BluetoothSettings object.
             **kwargs: Additional keyword arguments.
         """
         import copy
         self.settings: SettingsData | None = settings
         self.push: PushSettings | None = push
+        self.bluetooth: BluetoothSettings | None = bluetooth
         if raw:
             self.channels: list[Channel] = [
                 Channel(copy.deepcopy(c)) for c in raw.get("channel", [])

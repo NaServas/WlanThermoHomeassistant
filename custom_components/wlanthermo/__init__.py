@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, PLATFORMS
 from .api import WLANThermoApi
-from .data import PushSettings, WlanthermoData, SettingsData
+from .data import BluetoothSettings, PushSettings, WlanthermoData, SettingsData
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from datetime import timedelta
 from typing import Any
@@ -109,6 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 			api._consecutive_failures = 0
 			settings = None
 			push = None
+			bluetooth = None
 			try:
 				raw_settings = await api.get_settings()
 				if raw_settings:
@@ -121,11 +122,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 					push = PushSettings(raw_push)
 			except Exception:
 				_LOGGER.debug("WLANThermo: Device offline (no /push)")
+			try:
+				raw_bt = await api.get_bluetooth()
+				if raw_bt:
+					bluetooth = BluetoothSettings.from_json(raw_bt)
+			except Exception:
+				_LOGGER.debug("WLANThermo: Device offline (no /getbluetooth)")
 
 			return WlanthermoData(
 				raw=raw_data,
 				settings=settings,
 				push=push,
+				bluetooth=bluetooth,
 			)
 		except UpdateFailed:
 			raise

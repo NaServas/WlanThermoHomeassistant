@@ -32,6 +32,7 @@ from datetime import timedelta, datetime
 import logging
 import collections
 
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Any) -> None:
     """
@@ -109,8 +110,9 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
                 ])
             entity_store["settings"].add("settings")
         if new_entities:
-            async_add_entities(new_entities)
-    coordinator.async_add_listener(_async_discover_entities)
+            async_add_entities(new_entities, update_before_add=True)
+
+    #coordinator.async_add_listener(_async_discover_entities)
     await _async_discover_entities()
 
 
