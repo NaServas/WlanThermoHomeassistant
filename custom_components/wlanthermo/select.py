@@ -550,8 +550,6 @@ class WlanthermoPushoverPrioritySelect(CoordinatorEntity, SelectEntity):
         return bool(
             data
             and data.push
-            and data.push.pushover.token
-            and data.push.pushover.user_key
         )
 
     @property
