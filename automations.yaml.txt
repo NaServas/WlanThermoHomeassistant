@@ -1,0 +1,67 @@
+alias: WLANThermo Niedertemperatur Alarm
+description: ""
+triggers:
+  - trigger: time_pattern
+    minutes: /1
+conditions:
+  - condition: template
+    value_template: "{{ states('sensor.wlanthermo_niedertemperatur_alarm') != \"0b000000000\"}}"
+  - condition: state
+    entity_id: sensor.wlanthermo_system_status
+    state:
+      - online
+  - condition: state
+    entity_id: input_boolean.wlanthermo_low_temp_alarm_timeout
+    state:
+      - "off"
+  - condition: template
+    value_template: >-
+      {% set alarms_active = states('sensor.wlanthermo_niedertemperatur_alarm')
+      %}
+
+      {# {% set alarms_active = "0b100001001" %} #}
+
+      {% set data = namespace(active_alarms = 0, continue = false, alarm_list =
+      [],  ch_alarm_active = [])%}
+
+      {% set data.ch_alarm_type =
+      [states('select.wlanthermo_kanal_9_alarmmodus'),
+      states('select.wlanthermo_kanal_8_alarmmodus'),
+      states('select.wlanthermo_kanal_7_alarmmodus'),
+      states('select.wlanthermo_kanal_6_alarmmodus'),
+      states('select.wlanthermo_kanal_5_alarmmodus'),
+      states('select.wlanthermo_kanal_4_alarmmodus'),
+      states('select.wlanthermo_kanal_3_alarmmodus'),
+      states('select.wlanthermo_kanal_2_alarmmodus'),
+      states('select.wlanthermo_kanal_1_alarmmodus')]%}
+
+
+
+      {%for i in range(1,10)%} 
+        {% set data.ch_alarm_active = data.ch_alarm_active +  [((alarms_active[-i] == "1") and ((data.ch_alarm_type[-i] == "push") or (data.ch_alarm_type[-i] == "push_buzzer")))]%}
+        {%if ((alarms_active[-i] >= '1') and (data.ch_alarm_active[i-1] == true)) %}
+            {% set data.alarm_list = data.alarm_list + [i]  %}
+            {% set data.active_alarms = data.active_alarms + 1 %}
+            {% set data.continue = true %}
+        {%endif%}
+      {%endfor%}
+
+
+      {{data.continue}}
+actions:
+  - parallel:
+      - action: script.wlanthermo_niedrigtemperaturalarm_mit_confirm
+        metadata: {}
+        data: {}
+      - sequence:
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 50
+              milliseconds: 0
+          - action: notify.notify_all_devices
+            data:
+              message: clear_notification
+              data:
+                tag: wtherm_low_temp_alarm_notification
+mode: single
