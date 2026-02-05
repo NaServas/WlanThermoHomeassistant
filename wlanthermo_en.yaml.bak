@@ -1,5 +1,5 @@
 button_card_templates:
-  wlt_kanal_button:
+  wlt_channel_button:
     variables:
       device_name: wlanthermo
     show_icon: true
@@ -8,25 +8,25 @@ button_card_templates:
     icon: mdi:thermometer
     name: |
       [[[
-          const id = parseInt(entity.entity_id.match(/kanal_(\d+)_/)[1]);
-          const dev = variables.device_name;
-          const temp = entity.state !== 'unavailable' ? entity.state + "°C" : "N/A";
-          return states[`text.${dev}_kanal_${id}_name`]?.state + "  " + temp;
+        const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+        const dev = variables.device_name;
+        const temp = entity.state !== 'unavailable' ? entity.state + "°C" : "N/A";
+        return states[`text.${dev}_kanal_${id}_name`]?.state + "  " + temp;
       ]]]
     custom_fields:
-      restzeit: |
-        [[[ 
-          const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+      time_left: |
+        [[[
+          const id = entity.entity_id.match(/channel_(\d+)_/)[1];
           const dev = variables.device_name;
-          const tl = states[`sensor.${dev}_kanal_${id}_restzeit`];
-          return tl.state != 0 ? `Restzeit: ${tl.state}` : "Restzeit: ~ ";
+          const tl = states[`sensor.${dev}_channel_${id}_time_left`];
+          return tl.state != 0 ? `Time left: ${tl.state}` : "Time left: ~ ";
         ]]]
       minmax: |
         [[[
-          const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+          const id = entity.entity_id.match(/channel_(\d+)_/)[1];
           const dev = variables.device_name;
-          const min = states[`number.${dev}_kanal_${id}_minimum`]?.state;
-          const max = states[`number.${dev}_kanal_${id}_maximum`]?.state;
+          const min = states[`number.${dev}_channel_${id}_minimum`]?.state;
+          const max = states[`number.${dev}_channel_${id}_maximum`]?.state;
           return `
             <div style="
               display:flex;
@@ -48,7 +48,7 @@ button_card_templates:
         ]]]
     styles:
       grid:
-        - grid-template-areas: '"i n" "i minmax" "i restzeit"'
+        - grid-template-areas: '"i n" "i minmax" "i time_left"'
         - grid-template-columns: 30px 1fr
         - grid-template-rows: auto auto
         - row-gap: 2px
@@ -58,19 +58,19 @@ button_card_templates:
         - border-radius: 12px
         - background-color: |
             [[[
-              const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+              const id = entity.entity_id.match(/channel_(\d+)_/)[1];
               const dev = variables.device_name;
 
-              const temp = parseFloat(states[`sensor.${dev}_kanal_${id}_temperatur`]?.state);
-              const max  = parseFloat(states[`number.${dev}_kanal_${id}_maximum`]?.state);
+              const temp = parseFloat(states[`sensor.${dev}_channel_${id}_temperature`]?.state);
+              const max  = parseFloat(states[`number.${dev}_channel_${id}_maximum`]?.state);
 
               if (isNaN(temp) || isNaN(max)) {
-                return "rgba(250,250,0,0.3)";  // fallback bei fehlenden Werten
+                return "rgba(250,250,0,0.3)";  // fallback for missing values
               }
 
               return temp < max
-                ? "rgba(0,150,0,0.3)"   // grün
-                : "rgba(150,0,0,0.3)";  // rot
+                ? "rgba(0,150,0,0.3)"   // green
+                : "rgba(150,0,0,0.3)";  // red
             ]]]
       name:
         - font-size: 14px
@@ -78,9 +78,9 @@ button_card_templates:
         - grid-area: 'n'
         - align-self: end
       custom_fields:
-        restzeit:
+        time_left:
           - font-size: 12px
-          - grid-area: restzeit
+          - grid-area: time_left
           - align-self: start
         minmax:
           - grid-area: minmax
@@ -98,59 +98,59 @@ button_card_templates:
         data:
           title: |
             [[[
-              const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
-              return "Kanal " + id;
+              const id = entity.entity_id.match(/channel_(\d+)_/)[1];
+              return "Channel " + id;
             ]]]
           content:
             type: entities
             entities:
               - |
                 [[[
-                  const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `sensor.${dev}_kanal_${id}_temperatur`;
+                  return `sensor.${dev}_channel_${id}_temperature`;
                 ]]]
               - |
                 [[[
-                  const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `sensor.${dev}_kanal_${id}_restzeit`;
+                  return `sensor.${dev}_channel_${id}_time_left`;
                 ]]]
               - |
                 [[[
-                  const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `text.${dev}_kanal_${id}_name`;
+                  return `text.${dev}_channel_${id}_name`;
                 ]]]
               - |
                 [[[
-                  const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `number.${dev}_kanal_${id}_minimum`;
+                  return `number.${dev}_channel_${id}_minimum`;
                 ]]]
               - |
                 [[[
-                  const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `number.${dev}_kanal_${id}_maximum`;
+                  return `number.${dev}_channel_${id}_maximum`;
                 ]]]
               - |
                 [[[
-                  const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `select.${dev}_kanal_${id}_alarmmodus`;
+                  return `select.${dev}_channel_${id}_alarm_mode`;
                 ]]]
               - |
                 [[[
-                  const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `light.${dev}_kanal_${id}_farbe`;
+                  return `light.${dev}_channel_${id}_color`;
                 ]]]
               - |
                 [[[
-                  const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
+                  const id = entity.entity_id.match(/channel_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `select.${dev}_kanal_${id}_sensortyp`;
+                  return `select.${dev}_channel_${id}_probe_type`;
                 ]]]
   wlt_pitmaster_button:
     show_icon: true
@@ -166,18 +166,18 @@ button_card_templates:
         return "Pitmaster " + (id + 1) + "  " + temp;
       ]]]
     custom_fields:
-      restzeit: |
+      time_left: |
         [[[ 
           const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
           const dev = variables.device_name;
-          const tl = states[`sensor.${dev}_pitmaster_${id}_leistung`];
-          return tl.state != 0 ? `Geschwindigkeit: ${tl.state} %` : "Geschwindigkeit: ~ ";
+          const tl = states[`sensor.${dev}_pitmaster_${id}_power`];
+          return tl.state != 0 ? `Speed: ${tl.state} %` : "Speed: ~ ";
         ]]]
       max: |
         [[[
           const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
           const dev = variables.device_name;
-          const max = states[`number.${dev}_pitmaster_${id}_leistung`]?.state;
+          const max = states[`number.${dev}_pitmaster_${id}_power`]?.state;
           return `
             <div style="
               display:flex;
@@ -195,7 +195,7 @@ button_card_templates:
         ]]]
     styles:
       grid:
-        - grid-template-areas: '"i n" "i max" "i restzeit"'
+        - grid-template-areas: '"i n" "i max" "i time_left"'
         - grid-template-columns: 30px 1fr
         - grid-template-rows: auto auto
         - row-gap: 2px
@@ -215,9 +215,9 @@ button_card_templates:
         - grid-area: 'n'
         - align-self: end
       custom_fields:
-        restzeit:
+        time_left:
           - font-size: 12px
-          - grid-area: restzeit
+          - grid-area: time_left
           - align-self: start
         max:
           - font-size: 12px
@@ -246,31 +246,31 @@ button_card_templates:
                 [[[
                   const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `number.${dev}_pitmaster_${id}_leistung`;
+                  return `number.${dev}_pitmaster_${id}_power`;
                 ]]]
               - |
                 [[[
                   const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `number.${dev}_pitmaster_${id}_solltemperatur`;
+                  return `number.${dev}_pitmaster_${id}_temperature`;
                 ]]]
               - |
                 [[[
                   const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `select.${dev}_pitmaster_${id}_kanal`;
+                  return `select.${dev}_pitmaster_${id}_channel`;
                 ]]]
               - |
                 [[[
                   const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `select.${dev}_pitmaster_${id}_pid_profil`;
+                  return `select.${dev}_pitmaster_${id}_pid_profile`;
                 ]]]
               - |
                 [[[
                   const id = entity.entity_id.match(/pitmaster_(\d+)_/)[1];
                   const dev = variables.device_name;
-                  return `select.${dev}_pitmaster_${id}_modus`;
+                  return `select.${dev}_pitmaster_${id}_mode`;
                 ]]]
   wlt_pitprofil_button:
     show_icon: false
@@ -305,7 +305,7 @@ button_card_templates:
           title: |
             [[[
               const id = entity.entity_id.match(/pid_profil_(\d+)_/)[1];
-              return "Pit Profil " + id;
+              return "Pit Profile " + id;
             ]]]
           content:
             type: entities
@@ -318,17 +318,17 @@ button_card_templates:
               - |
                 [[[
                   const id = entity.entity_id.match(/pid_profil_(\d+)_/)[1];
-                  return `select.${variables.device_name}_pid_profil_${id}_aktor`;
+                  return `select.${variables.device_name}_pid_profil_${id}_actuator`;
                 ]]]
               - |
                 [[[
                   const id = entity.entity_id.match(/pid_profil_(\d+)_/)[1];
-                  return `switch.${variables.device_name}_pid_profil_${id}_deckelerkennung`;
+                  return `switch.${variables.device_name}_pid_profil_${id}_open_lid_detection`;
                 ]]]
               - |
                 [[[
                   const id = entity.entity_id.match(/pid_profil_(\d+)_/)[1];
-                  return `number.${variables.device_name}_pid_profil_${id}_startleistung_jp`;
+                  return `number.${variables.device_name}_pid_profil_${id}_jump_power_jp`;
                 ]]]
               - |
                 [[[
@@ -353,145 +353,8 @@ button_card_templates:
               - |
                 [[[
                   const id = entity.entity_id.match(/pid_profil_(\d+)_/)[1];
-                  return `switch.${variables.device_name}_pid_profil_${id}_aktor_verknupfung`;
+                  return `switch.${variables.device_name}_pid_profil_${id}_actuator_link`;
                 ]]]
-  wlt_notification_button:
-    show_icon: false
-    show_name: true
-    show_state: false
-    icon: mdi:thermometer
-    variables:
-      device_name: wlanthermo
-    name: |
-      [[[
-        return "Benachichtigungen";
-      ]]]
-    styles:
-      card:
-        - padding: 4px
-        - height: 70px
-        - border-radius: 12px
-        - background: |
-            [[[
-              const pushover = states['switch.wlanthermo_push_pushover_aktiv']?.state === 'on';
-              const telegram = states['switch.wlanthermo_push_telegram_aktiv']?.state === 'on';
-              const left = pushover ? 'rgba(0,180,0,0.6)' : 'rgba(200,0,0,0.6)';
-              const right = telegram ? 'rgba(0,180,0,0.6)' : 'rgba(200,0,0,0.6)';
-              return `
-                linear-gradient(
-                  to right,
-                  ${left},
-                  ${right}
-                )
-              `;
-            ]]]
-      name:
-        - font-size: 14px
-        - font-weight: bold
-        - align-self: center
-      icon:
-        - width: 22px
-        - height: 22px
-    tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.popup
-        data:
-          title: Benachrichtigungen
-          content:
-            type: entities
-            entities:
-              - switch.wlanthermo_push_pushover_aktiv
-              - select.wlanthermo_push_pushover_prioritat
-              - text.wlanthermo_push_pushover_token
-              - text.wlanthermo_push_pushover_user_key
-              - button.wlanthermo_push_pushover_testen
-              - switch.wlanthermo_push_telegram_aktiv
-              - text.wlanthermo_push_telegram_token
-              - text.wlanthermo_push_telegram_chat_id
-              - button.wlanthermo_push_telegram_testen
-  wlt_bluetooth_button:
-    show_icon: false
-    show_name: true
-    show_state: false
-    icon: mdi:thermometer
-    variables:
-      device_name: wlanthermo
-    name: |
-      [[[
-        return "Bluetooth";
-      ]]]
-    styles:
-      card:
-        - padding: 4px
-        - height: 70px
-        - border-radius: 12px
-        - background-repeat: no-repeat
-        - background-size: 100% 30%, 100% 40%, 100% 30%
-        - background-position: bottom, center, top
-        - background: |
-            [[[
-              const bt = states['switch.wlanthermo_bluetooth_aktiv']?.state === 'on';
-
-              // Bluetooth AUS → ganze Karte rot
-              if (!bt) {
-                return 'linear-gradient(to right, rgba(200,0,0,1), rgba(200,0,0,1))';
-              }
-
-              // Bluetooth AN → Sensor-Felder
-              const sensors = [
-                'switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_1',
-                'switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_2',
-                'switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_3',
-                'switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_4',
-                'switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_5',
-                'switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_6'
-              ];
-
-              // Farbe pro Sensor
-              const colors = sensors.map(id =>
-                states[id]?.state === 'on'
-                  ? 'rgba(0,180,0,1)'   // aktiv → grün
-                  : 'rgba(200,0,0,1)'   // inaktiv → rot
-              );
-
-              // Zwischen-Fades (20% transparent)
-              const fades = colors.map(c => c.replace(',1)', ',0.8)'));
-
-              // Gradient bauen: color1, fade1, color2, fade2, ...
-              const parts = [];
-              for (let i = 0; i < colors.length; i++) {
-                parts.push(colors[i]);
-                parts.push(colors[i]);
-                if (i < fades.length - 1) parts.push(fades[i]);
-              }
-                parts.push(colors[colors.length-1]);
-
-              return `linear-gradient(to right, ${parts.join(',')})`;
-            ]]]
-      name:
-        - font-size: 14px
-        - font-weight: bold
-        - align-self: center
-      icon:
-        - width: 22px
-        - height: 22px
-    tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.popup
-        data:
-          title: Bluetooth
-          content:
-            type: entities
-            entities:
-              - switch.wlanthermo_bluetooth_aktiv
-              - switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_1
-              - switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_2
-              - switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_3
-              - switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_4
-              - switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_5
-              - switch.wlanthermo_bluetooth_phyrawadv_03c9_fuhler_6
 views:
   - title: WLANThermo
     path: wlanthermo
@@ -509,17 +372,15 @@ views:
               square: false
             filter:
               include:
-                - entity_id: sensor.wlanthermo_kanal_*_temperatur
+                - entity_id: sensor.wlanthermo_channel_*_temperature
                   options:
                     type: custom:button-card
-                    template: wlt_kanal_button
+                    template: wlt_channel_button
               exclude:
                 - state: unavailable
                 - state: unknown
-              sort:
-                method: attribute
-                attribute: id
-                numeric: true
+            sort:
+              method: entity_id
             card_param: cards
           - type: grid
             columns: 2
@@ -538,7 +399,7 @@ views:
                       max_y_axis: 100
                     filter:
                       include:
-                        - entity_id: sensor.wlanthermo_kanal_*_temperatur
+                        - entity_id: sensor.wlanthermo_channel_*_temperature
                       exclude:
                         - state: unavailable
                         - state: unknown
@@ -556,7 +417,7 @@ views:
                       square: false
                     filter:
                       include:
-                        - entity_id: sensor.wlanthermo_pitmaster_*_temperatur
+                        - entity_id: sensor.wlanthermo_pitmaster_*_temperature
                           options:
                             type: custom:button-card
                             template: wlt_pitmaster_button
@@ -571,8 +432,8 @@ views:
                     square: false
                     cards:
                       - type: custom:mushroom-entity-card
-                        entity: sensor.wlanthermo_batteriestand
-                        name: Akku %
+                        entity: sensor.wlanthermo_battery_level
+                        name: Battery %
                         icon: mdi:battery
                         card_mod:
                           style: |
@@ -580,7 +441,7 @@ views:
                               border-radius: 12px;
                               padding: 8px;
                               background-color:
-                                {% set v = states('sensor.wlanthermo_batteriestand') | int(default=0) %}
+                                {% set v = states('sensor.wlanthermo_battery_level') | int(default=0) %}
                                 {% if v > 60 %}
                                   rgba(0,200,0,0.3)
                                 {% elif v > 30 %}
@@ -590,8 +451,8 @@ views:
                                 {% endif %};
                             }
                       - type: custom:mushroom-entity-card
-                        entity: sensor.wlanthermo_signalstarke
-                        name: WLAN Signal
+                        entity: sensor.wlanthermo_signal_strength
+                        name: WiFi Signal
                         icon: mdi:wifi
                         card_mod:
                           style: |
@@ -599,7 +460,7 @@ views:
                               border-radius: 12px;
                               padding: 8px;
                               background-color:
-                                {% set v = states('sensor.wlanthermo_signalstarke') | int(default=0) %}
+                                {% set v = states('sensor.wlanthermo_signal_strength') | int(default=0) %}
                                 {% if v > -60 %}
                                   rgba(0,200,0,0.3)
                                 {% elif v > -75 %}
@@ -638,8 +499,8 @@ views:
                               padding: 8px;
                             }
                       - type: custom:mushroom-entity-card
-                        entity: sensor.wlanthermo_ladevorgang_batterie
-                        name: Ladung
+                        entity: sensor.wlanthermo_battery_charging
+                        name: Charging
                         icon: mdi:power-plug
                         card_mod:
                           style: |
@@ -647,8 +508,8 @@ views:
                               border-radius: 12px;
                               padding: 8px;
                               background-color:
-                                {% set charging = states('sensor.wlanthermo_ladevorgang_batterie') %}
-                                {% set soc = states('sensor.wlanthermo_batteriestand') | int(0) %}
+                                {% set charging = states('sensor.wlanthermo_battery_charging') %}
+                                {% set soc = states('sensor.wlanthermo_battery_level') | int(0) %}
                                 {% if charging in ['true','on','online','connected','True','1'] %}
                                   rgba(0,200,0,0.3)     /* charging */
                                 {% elif charging in ['false','off','False','0'] and soc == 100 %}
@@ -677,8 +538,8 @@ views:
                                 {% endif %};
                             }
                       - type: custom:mushroom-entity-card
-                        entity: sensor.wlanthermo_system_zeit
-                        name: Zeit
+                        entity: sensor.wlanthermo_system_time
+                        name: Time
                         icon: mdi:clock
                         card_mod:
                           style: |
@@ -687,8 +548,8 @@ views:
                               padding: 8px;
                             }
                       - type: custom:mushroom-entity-card
-                        entity: sensor.wlanthermo_gerate_info
-                        name: Geräte Info
+                        entity: sensor.wlanthermo_device_info
+                        name: Device Info
                         icon: mdi:devices
                         card_mod:
                           style: |
@@ -710,20 +571,6 @@ views:
                     sort:
                       method: entity_id
                     card_param: cards
-                  - type: grid
-                    columns: 2
-                    square: false
-                    cards:
-                      - type: custom:button-card
-                        entity: switch.wlanthermo_push_pushover_aktiv
-                        name: Benachrichtigungen
-                        icon: mdi:battery
-                        template: wlt_notification_button
-                      - type: custom:button-card
-                        entity: switch.wlanthermo_bluetooth_aktiv
-                        name: Bluetooth
-                        icon: mdi:battery
-                        template: wlt_bluetooth_button
           - type: custom:auto-entities
             card:
               type: custom:apexcharts-card
@@ -748,18 +595,18 @@ views:
                 - state: unavailable
                 - state: unknown
               include:
-                - entity_id: sensor.wlanthermo_pitmaster_*_leistung
+                - entity_id: sensor.wlanthermo_pitmaster_*_power
                   options:
                     yaxis_id: '1'
                     stroke_width: 1
                     type: area
                     opacity: 0.25
                     curve: stepline
-                - entity_id: sensor.wlanthermo_pitmaster_*_temperatur
+                - entity_id: sensor.wlanthermo_pitmaster_*_temperature
                   options:
                     yaxis_id: '0'
                     stroke_width: 1
-                - entity_id: sensor.wlanthermo_kanal_*_temperatur
+                - entity_id: sensor.wlanthermo_channel_*_temperature
                   options:
                     yaxis_id: '0'
                     stroke_width: 3

@@ -70,15 +70,15 @@ Andere Modelle und Firmware-Versionen könnten ebenfalls funktionieren, sind abe
 
 ## Dashboard (optional)
 
+Wiki: [Dashboard Erklärung](https://github.com/WLANThermo-nano/homeassistant/wiki/dashboard)  
 Das Beispiel‑Dashboard `wlanthermo.yaml` ist optional und dient als Vorlage.  
 
-[Dashboard Erklärung](https://github.com/WLANThermo-nano/homeassistant/wiki/dashboard)
 
 ---
 
 ## Installation
 
-[Installation](docs/de/setup.md)
+Wiki: [Installation](docs/de/setup.md)  
 über HACS (empfohlen):  
 **Benutzerdefiniertes Repository**: `https://github.com/WLANThermo-nano/homeassistant`  
 manuell:  
@@ -88,7 +88,7 @@ manuell:
 
 ## Einrichtung
 
-[Einrichtung](https://github.com/WLANThermo-nano/homeassistant/wiki/Einrichtung#einrichtung)  
+Wiki: [Einrichtung](https://github.com/WLANThermo-nano/homeassistant/wiki/Einrichtung#einrichtung)  
 1. **Einstellungen → Geräte & Dienste → Integration hinzufügen**
 2. **WLANThermo** auswählen
 3. IP-Adresse / Host angeben
@@ -98,23 +98,23 @@ manuell:
 
 ## Optionen der Integration
 
-Die Optionen erreichst du über:
+Wiki: [Optionen](https://github.com/WLANThermo-nano/homeassistant/wiki/Einrichtung#optionen-der-integration)  
 
-**Einstellungen → Geräte & Dienste → WLANThermo → Optionen/Zahnrad**
-[Optionen](https://github.com/WLANThermo-nano/homeassistant/wiki/Einrichtung#optionen-der-integration)
+Die Optionen erreichst du über:  
+**Einstellungen → Geräte & Dienste → WLANThermo → Optionen/Zahnrad**  
 
 ---
 
 ## Entitäten in HA
 
-👉 Alle Entitäten im Detail findest du in der Wiki:  
-[Entitäten & Sensoren](https://github.com/WLANThermo-nano/homeassistant/wiki/entities)
+👉 Alle Entitäten im Detail findest du in der Wiki: [Entitäten & Sensoren](https://github.com/WLANThermo-nano/homeassistant/wiki/entities)  
 
 ## Entwicklung
 
-[Entwicklung](https://github.com/WLANThermo-nano/homeassistant/wiki/development)
+
+Wiki: [Entwicklung](https://github.com/WLANThermo-nano/homeassistant/wiki/development)  
 
 ## WIKI
-- [FAQ](https://github.com/WLANThermo-nano/homeassistant/wiki/faq)
-- [Troubleshooting](https://github.com/WLANThermo-nano/homeassistant/wiki/troubleshooting)
-- [API Hinweise](https://github.com/WLANThermo-nano/homeassistant/wiki/api)
+- [FAQ](https://github.com/WLANThermo-nano/homeassistant/wiki/faq)  
+- [Troubleshooting](https://github.com/WLANThermo-nano/homeassistant/wiki/troubleshooting)  
+- [API Hinweise](https://github.com/WLANThermo-nano/homeassistant/wiki/api)  

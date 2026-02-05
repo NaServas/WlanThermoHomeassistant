@@ -481,7 +481,7 @@ button_card_templates:
       browser_mod:
         service: browser_mod.popup
         data:
-          title: Bluetooth
+          title: Benachrichtigungen
           content:
             type: entities
             entities:
@@ -516,10 +516,8 @@ views:
               exclude:
                 - state: unavailable
                 - state: unknown
-              sort:
-                method: attribute
-                attribute: id
-                numeric: true
+            sort:
+              method: entity_id
             card_param: cards
           - type: grid
             columns: 2

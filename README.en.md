@@ -70,15 +70,15 @@ Other models and firmware versions may also work but are not tested.
 
 ## Dashboard (optional)
 
+Wiki: [Dashboard explanation](https://github.com/WLANThermo-nano/homeassistant/wiki/dashboard-en)  
 The sample dashboard `wlanthermo_en.yaml` is optional and serves as a template.  
 
-[Dashboard explanation](https://github.com/WLANThermo-nano/homeassistant/wiki/dashboard-en)
 
 ---
 
 ## Installation
 
-[Installation](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en)
+Wiki: [Installation](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en)  
 via HACS (recommended):  
 **Custom Repository**: `https://github.com/WLANThermo-nano/homeassistant`  
 manual:  
@@ -88,7 +88,7 @@ Copy `custom_components/wlanthermo` to `<HA config>/custom_components/`
 
 ## Setup
 
-[Setup](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en#setup)
+Wiki: [Setup](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en#setup)  
 1. **Settings → Devices & Services → Add Integration**
 2. Select **WLANThermo**
 3. Enter IP address / host
@@ -98,21 +98,20 @@ Copy `custom_components/wlanthermo` to `<HA config>/custom_components/`
 
 ## Integration Options
 
-You can access the options via:
+Wiki: [Options](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en#integration-options)  
+You can access the options via:  
 
 **Settings → Devices & Services → WLANThermo → Options/gear icon**
-[Options](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en#integration-options)
 
 ---
 
 ## Entities in HA
 
-👉 For all entity details, see the Wiki:  
-[Entities & Sensors](https://github.com/WLANThermo-nano/homeassistant/wiki/entities-en)
+👉 For all entity details, see the Wiki: [Entities & Sensors](https://github.com/WLANThermo-nano/homeassistant/wiki/entities-en)
 
 ## Development
 
-[Development](https://github.com/WLANThermo-nano/homeassistant/wiki/development-en)
+Wiki: [Development](https://github.com/WLANThermo-nano/homeassistant/wiki/development-en)
 
 ## WIKI
 - [FAQ](https://github.com/WLANThermo-nano/homeassistant/wiki/faq-en)

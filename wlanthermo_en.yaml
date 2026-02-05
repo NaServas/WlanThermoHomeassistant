@@ -8,10 +8,10 @@ button_card_templates:
     icon: mdi:thermometer
     name: |
       [[[
-        const id = entity.entity_id.match(/channel_(\d+)_/)[1];
-        const dev = variables.device_name;
-        const temp = entity.state !== 'unavailable' ? entity.state + "°C" : "N/A";
-        return states[`text.${dev}_kanal_${id}_name`]?.state + "  " + temp;
+          const id = parseInt(entity.entity_id.match(/channel_(\d+)_/)[1]);
+          const dev = variables.device_name;
+          const temp = entity.state !== 'unavailable' ? entity.state + "°C" : "N/A";
+          return states[`text.${dev}_kanal_${id}_name`]?.state + "  " + temp;
       ]]]
     custom_fields:
       time_left: |
@@ -355,6 +355,143 @@ button_card_templates:
                   const id = entity.entity_id.match(/pid_profil_(\d+)_/)[1];
                   return `switch.${variables.device_name}_pid_profil_${id}_actuator_link`;
                 ]]]
+  wlt_notification_button:
+    show_icon: false
+    show_name: true
+    show_state: false
+    icon: mdi:thermometer
+    variables:
+      device_name: wlanthermo
+    name: |
+      [[[
+        return "Notifications";
+      ]]]
+    styles:
+      card:
+        - padding: 4px
+        - height: 70px
+        - border-radius: 12px
+        - background: |
+            [[[
+              const pushover = states['switch.wlanthermo_push_pushover_activ']?.state === 'on';
+              const telegram = states['switch.wlanthermo_push_telegram_activ']?.state === 'on';
+              const left = pushover ? 'rgba(0,180,0,0.6)' : 'rgba(200,0,0,0.6)';
+              const right = telegram ? 'rgba(0,180,0,0.6)' : 'rgba(200,0,0,0.6)';
+              return `
+                linear-gradient(
+                  to right,
+                  ${left},
+                  ${right}
+                )
+              `;
+            ]]]
+      name:
+        - font-size: 14px
+        - font-weight: bold
+        - align-self: center
+      icon:
+        - width: 22px
+        - height: 22px
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Notifications
+          content:
+            type: entities
+            entities:
+              - switch.wlanthermo_push_pushover_activ
+              - select.wlanthermo_push_pushover_prioritat
+              - text.wlanthermo_push_pushover_token
+              - text.wlanthermo_push_pushover_user_key
+              - button.wlanthermo_push_pushover_test
+              - switch.wlanthermo_push_telegram_activ
+              - text.wlanthermo_push_telegram_token
+              - text.wlanthermo_push_telegram_chat_id
+              - button.wlanthermo_push_telegram_test
+  wlt_bluetooth_button:
+    show_icon: false
+    show_name: true
+    show_state: false
+    icon: mdi:thermometer
+    variables:
+      device_name: wlanthermo
+    name: |
+      [[[
+        return "Bluetooth";
+      ]]]
+    styles:
+      card:
+        - padding: 4px
+        - height: 70px
+        - border-radius: 12px
+        - background-repeat: no-repeat
+        - background-size: 100% 30%, 100% 40%, 100% 30%
+        - background-position: bottom, center, top
+        - background: |
+            [[[
+              const bt = states['switch.wlanthermo_bluetooth_aktiv']?.state === 'on';
+
+              // Bluetooth OFF → Card red
+              if (!bt) {
+                return 'linear-gradient(to right, rgba(200,0,0,1), rgba(200,0,0,1))';
+              }
+
+              // Bluetooth ON → Sensor-Filds
+              const sensors = [
+                'switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_1',
+                'switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_2',
+                'switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_3',
+                'switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_4',
+                'switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_5',
+                'switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_6'
+              ];
+
+              // Farbe pro Sensor
+              const colors = sensors.map(id =>
+                states[id]?.state === 'on'
+                  ? 'rgba(0,180,0,1)'   // aktiv → green
+                  : 'rgba(200,0,0,1)'   // inaktiv → red
+              );
+
+              // Zwischen-Fades (20% transparent)
+              const fades = colors.map(c => c.replace(',1)', ',0.8)'));
+
+              // Gradient build: color1, fade1, color2, fade2, ...
+              const parts = [];
+              for (let i = 0; i < colors.length; i++) {
+                parts.push(colors[i]);
+                parts.push(colors[i]);
+                if (i < fades.length - 1) parts.push(fades[i]);
+              }
+                parts.push(colors[colors.length-1]);
+
+              return `linear-gradient(to right, ${parts.join(',')})`;
+            ]]]
+      name:
+        - font-size: 14px
+        - font-weight: bold
+        - align-self: center
+      icon:
+        - width: 22px
+        - height: 22px
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Bluetooth
+          content:
+            type: entities
+            entities:
+              - switch.wlanthermo_bluetooth_aktiv
+              - switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_1
+              - switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_2
+              - switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_3
+              - switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_4
+              - switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_5
+              - switch.wlanthermo_bluetooth_phyrawadv_03c9_sensor_6
 views:
   - title: WLANThermo
     path: wlanthermo
@@ -379,8 +516,10 @@ views:
               exclude:
                 - state: unavailable
                 - state: unknown
-            sort:
-              method: entity_id
+              sort:
+                method: attribute
+                attribute: id
+                numeric: true
             card_param: cards
           - type: grid
             columns: 2
@@ -571,6 +710,20 @@ views:
                     sort:
                       method: entity_id
                     card_param: cards
+                  - type: grid
+                    columns: 2
+                    square: false
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.wlanthermo_push_pushover_aktiv
+                        name: Notifications
+                        icon: mdi:battery
+                        template: wlt_notification_button
+                      - type: custom:button-card
+                        entity: switch.wlanthermo_bluetooth_aktiv
+                        name: Bluetooth
+                        icon: mdi:battery
+                        template: wlt_bluetooth_button
           - type: custom:auto-entities
             card:
               type: custom:apexcharts-card
