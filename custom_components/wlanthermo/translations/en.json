@@ -125,15 +125,31 @@
       "pitmaster_channel": {"name": "Pitmaster {pitmaster_number} Channel"},
       "pidprofile_aktor": {"name": "PID Profile {profile_id} Actuator",
                  "options": {"SSR": "SSR","FAN": "Fan","SERVO": "Servo","DAMPER": "Damper"}
+              },
+      "pushover_priority": {"name": "Push Pushover priority",
+                 "options": {"normal": "Normal","high": "High","emergency": "Emergency"}
               }
     },
     "text": {
       "channel_name": {"name": "Channel {channel_number} Name"},
-      "pidprofile_name": {"name": "PID Profile {profile_id} Name"}
+      "pidprofile_name": {"name": "PID Profile {profile_id} Name"},
+      "telegram_token": {"name": "Push Telegram Token"},
+      "telegram_chat_id": {"name": "Push Telegram Chat ID"},
+      "pushover_token": {"name": "Push Pushover Token"},
+      "pushover_user_key": {"name": "Push Pushover User Key"}
     },
     "switch": {
       "pidprofile_opl": {"name": "PID Profile {profile_id} Open Lid Detection"},
-      "pidprofile_link": {"name": "PID Profile {profile_id} Actuator Link"}
+      "pidprofile_link": {"name": "PID Profile {profile_id} Actuator Link"},
+      "telegram_enabled": {"name": "Push Telegram Active"},
+      "pushover_enabled": {"name": "Push Pushover Active"},
+      "bluetooth_enabled": {"name": "Bluetooth Active"},
+      "bluetooth_probe": {"name": "Bluetooth {name} Probe {probe}"}
+    },
+    "button": {
+      "telegram_test": {"name": "Push Telegram Test"},
+      "pushover_test": {"name": "Push Pushover Test"},
+      "reload_integration": {"name": "Reload Integration"}
     }
   }
 }

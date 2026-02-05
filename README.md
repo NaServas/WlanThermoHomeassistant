@@ -1,7 +1,7 @@
 
 # WLANThermo – Home Assistant Integration
 
-![Version](https://img.shields.io/badge/version-0.2.3-informational)
+![Version](https://img.shields.io/badge/version-0.3.0-informational)
 ![Lizenz](https://img.shields.io/badge/license-MIT-green)
 ![Home Assistant](https://img.shields.io/badge/HA-2025.12%2B-blue)
 [![Support](https://img.shields.io/badge/support-WLANThermo%20Forum-lightgrey)](https://wlanthermo.de/forums/)
@@ -25,7 +25,7 @@ Es besteht **kein offizieller Support** durch den Autor oder das WLANThermo-Team
 
 ## Dokumentation & Wiki
 
-Ausführliche Informationen findest du in der [deutschen Wiki](docs/de/README.md) oder [englischen Wiki](docs/en/README.md).
+Ausführliche Informationen findest du in der [deutschen Wiki](https://github.com/WLANThermo-nano/homeassistant/wiki) oder [englischen Wiki](https://github.com/WLANThermo-nano/homeassistant/wiki/Home-en).
 
 ---
 
@@ -54,6 +54,8 @@ Andere Modelle und Firmware-Versionen könnten ebenfalls funktionieren, sind abe
 - 🌡️ Temperatur-Sensoren dynamisch für alle Kanäle (Name & Nummer)
 - 🎛️ Pitmaster-Sensoren dynamisch (Leistung, Temperatur, Modus, PID, Kanal)
 - ⏱️ Restzeit-Sensor pro aktivem Kanal
+- ✉️ Konfiguration von Beanchrichtigungen über Pushover und Telegram
+- 📶 Bluetooth Temperatur-Sensoren Konfiguration
 - ☁️ Cloud-Sensoren 
 - 🔋 Systemdiagnose:
   - WLAN-RSSI
@@ -70,7 +72,7 @@ Andere Modelle und Firmware-Versionen könnten ebenfalls funktionieren, sind abe
 
 Das Beispiel‑Dashboard `wlanthermo.yaml` ist optional und dient als Vorlage.  
 
-[Dashboard Erklärung](docs/de/dashboard.md)
+[Dashboard Erklärung](https://github.com/WLANThermo-nano/homeassistant/wiki/dashboard)
 
 ---
 
@@ -86,7 +88,7 @@ manuell:
 
 ## Einrichtung
 
-[Einrichtung](docs/de/setup.md#einrichtung)  
+[Einrichtung](https://github.com/WLANThermo-nano/homeassistant/wiki/Einrichtung#einrichtung)  
 1. **Einstellungen → Geräte & Dienste → Integration hinzufügen**
 2. **WLANThermo** auswählen
 3. IP-Adresse / Host angeben
@@ -99,24 +101,20 @@ manuell:
 Die Optionen erreichst du über:
 
 **Einstellungen → Geräte & Dienste → WLANThermo → Optionen/Zahnrad**
-[Optionen](docs/de/setup.md#optionen-der-integration)
-
+[Optionen](https://github.com/WLANThermo-nano/homeassistant/wiki/Einrichtung#optionen-der-integration)
 
 ---
 
 ## Entitäten in HA
 
 👉 Alle Entitäten im Detail findest du in der Wiki:  
-[Entitäten & Sensoren](docs/de/entities.md)
+[Entitäten & Sensoren](https://github.com/WLANThermo-nano/homeassistant/wiki/entities)
 
 ## Entwicklung
 
-[Entwicklung](docs/de/development.md)
+[Entwicklung](https://github.com/WLANThermo-nano/homeassistant/wiki/development)
 
 ## WIKI
-- [FAQ](docs/de/faq.md)
-- [Troubleshooting](docs/de/troubleshooting.md)
-- [API Hinweise](docs/de/api.md)
-
----
-[🇩🇪 Deutsch](../de/README.md) | [🇬🇧 English](../en/README.md)
+- [FAQ](https://github.com/WLANThermo-nano/homeassistant/wiki/faq)
+- [Troubleshooting](https://github.com/WLANThermo-nano/homeassistant/wiki/troubleshooting)
+- [API Hinweise](https://github.com/WLANThermo-nano/homeassistant/wiki/api)

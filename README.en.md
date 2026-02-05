@@ -1,7 +1,7 @@
 
 # WLANThermo – Home Assistant Integration
 
-![Version](https://img.shields.io/badge/version-0.2.3-informational)
+![Version](https://img.shields.io/badge/version-0.3.0-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Home Assistant](https://img.shields.io/badge/HA-2025.12%2B-blue)
 [![Support](https://img.shields.io/badge/support-WLANThermo%20Forum-lightgrey)](https://wlanthermo.de/forums/)
@@ -25,7 +25,7 @@ There is **no official support** by the author or the WLANThermo team.
 
 ## Documentation & Wiki
 
-For detailed information, see the [German Wiki](docs/de/README.md) or [English Wiki](docs/en/README.md).
+For detailed information, see the [German Wiki](https://github.com/WLANThermo-nano/homeassistant/wiki) or [English Wiki](https://github.com/WLANThermo-nano/homeassistant/wiki/Home-en).
 
 ---
 
@@ -53,8 +53,8 @@ Other models and firmware versions may also work but are not tested.
 - 🔍 Automatic detection & setup via the HA UI
 - 🌡️ Dynamic temperature sensors for all channels (name & number)
 - 🎛️ Dynamic pitmaster sensors (power, temperature, mode, PID, channel)
-- ⏱️ Remaining time sensor per active channel
-- ✉️ Notification configuration via Pushover and Telegram
+- ⏱️ Time Left sensor for each active channel
+- ✉️ Configuration of notifications via Pushover and Telegram
 - 📶 Bluetooth temperature sensor configuration
 - ☁️ Cloud sensors
 - 🔋 System diagnostics:
@@ -68,18 +68,17 @@ Other models and firmware versions may also work but are not tested.
 
 ---
 
-
 ## Dashboard (optional)
 
 The sample dashboard `wlanthermo_en.yaml` is optional and serves as a template.  
 
-[Dashboard explanation](docs/en/dashboard.md)
+[Dashboard explanation](https://github.com/WLANThermo-nano/homeassistant/wiki/dashboard-en)
 
 ---
 
 ## Installation
 
-[Installation](docs/en/setup.md)
+[Installation](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en)
 via HACS (recommended):  
 **Custom Repository**: `https://github.com/WLANThermo-nano/homeassistant`  
 manual:  
@@ -89,7 +88,7 @@ Copy `custom_components/wlanthermo` to `<HA config>/custom_components/`
 
 ## Setup
 
-[Setup](docs/en/setup.md#setup)
+[Setup](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en#setup)
 1. **Settings → Devices & Services → Add Integration**
 2. Select **WLANThermo**
 3. Enter IP address / host
@@ -102,23 +101,20 @@ Copy `custom_components/wlanthermo` to `<HA config>/custom_components/`
 You can access the options via:
 
 **Settings → Devices & Services → WLANThermo → Options/gear icon**
-[Options](docs/en/setup.md#integration-options)
+[Options](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en#integration-options)
 
 ---
 
 ## Entities in HA
 
 👉 For all entity details, see the Wiki:  
-[Entities & Sensors](docs/en/entities.md)
+[Entities & Sensors](https://github.com/WLANThermo-nano/homeassistant/wiki/entities-en)
 
 ## Development
 
-[Development](docs/en/development.md)
+[Development](https://github.com/WLANThermo-nano/homeassistant/wiki/development-en)
 
 ## WIKI
-- [FAQ](docs/en/faq.md)
-- [Troubleshooting](docs/en/troubleshooting.md)
-- [API Notes](docs/en/api.md)
-
----
-[🇩🇪 Deutsch](../de/README.md) | [🇬🇧 English](../en/README.md)
+- [FAQ](https://github.com/WLANThermo-nano/homeassistant/wiki/faq-en)
+- [Troubleshooting](https://github.com/WLANThermo-nano/homeassistant/wiki/troubleshooting-en)
+- [API Notes](https://github.com/WLANThermo-nano/homeassistant/wiki/api-en)

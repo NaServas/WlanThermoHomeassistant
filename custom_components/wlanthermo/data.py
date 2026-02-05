@@ -16,31 +16,40 @@ class WlanthermoData:
         self,
         raw: Dict[str, Any] | None = None,
         settings: "SettingsData" | None = None,
+        push: "PushSettings" | None = None,
+        bluetooth: "BluetoothSettings" | None = None,
         **kwargs,
     ):
+        """
+        Initialize WlanthermoData with parsed /data endpoint response.
+        Args:
+            raw: Raw dictionary from /data endpoint.
+            settings: Optional SettingsData object.
+            push: Optional PushSettings object.
+            bluetooth: Optional BluetoothSettings object.
+            **kwargs: Additional keyword arguments.
+        """
         import copy
-
-        self.settings = settings
-
+        self.settings: SettingsData | None = settings
+        self.push: PushSettings | None = push
+        self.bluetooth: BluetoothSettings | None = bluetooth
         if raw:
-            self.channels = [
+            self.channels: list[Channel] = [
                 Channel(copy.deepcopy(c)) for c in raw.get("channel", [])
             ]
-            self.pitmasters = [
+            self.pitmasters: list[Pitmaster] = [
                 Pitmaster(copy.deepcopy(p))
                 for p in raw.get("pitmaster", {}).get("pm", [])
             ]
-            self.pitmaster_types = PitmasterTypes(
+            self.pitmaster_types: PitmasterTypes = PitmasterTypes(
                 raw.get("pitmaster", {}).get("type", [])
             )
-
-
-            self.system = SystemInfo(copy.deepcopy(raw.get("system", {})))
+            self.system: SystemInfo = SystemInfo(copy.deepcopy(raw.get("system", {})))
         else:
-            self.channels = []
-            self.pitmasters = []
-            self.pitmaster_types = PitmasterTypes([])
-            self.system = SystemInfo({})
+            self.channels: list[Channel] = []
+            self.pitmasters: list[Pitmaster] = []
+            self.pitmaster_types: PitmasterTypes = PitmasterTypes([])
+            self.system: SystemInfo = SystemInfo({})
 
 
 class SystemInfo:
@@ -49,11 +58,16 @@ class SystemInfo:
     Includes time, unit, battery, and connection status.
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize SystemInfo from /data endpoint.
+        Args:
+            data: Dictionary from /data endpoint's 'system' key.
+        """
         self.time: int = int(data.get("time", 0))
         self.unit: str = str(data.get("unit", "C"))
-        self.soc: Optional[int] = int(data["soc"]) if "soc" in data else None  # State of charge
-        self.charge: Optional[bool] = bool(data["charge"]) if "charge" in data else None  # Charging status
-        self.rssi: int = int(data.get("rssi", 0))  # WiFi signal
+        self.soc: Optional[int] = int(data["soc"]) if "soc" in data else None  # State of charge.
+        self.charge: Optional[bool] = bool(data["charge"]) if "charge" in data else None  # Charging status.
+        self.rssi: int = int(data.get("rssi", 0))  # WiFi signal.
         self.online: Optional[int] = int(data["online"]) if "online" in data else None
 
 class Channel:
@@ -62,6 +76,11 @@ class Channel:
     Includes temperature, alarm, and connection info.
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize Channel with sensor input data.
+        Args:
+            data: Dictionary for a single channel from /data endpoint.
+        """
         self.number: int = int(data.get("number", 0))
         self.name: str = str(data.get("name", ""))
         self.typ: int = int(data.get("typ", 0))
@@ -78,6 +97,11 @@ class Pitmaster:
     Represents a pitmaster (fan/servo controller) configuration and status.
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize Pitmaster configuration and status.
+        Args:
+            data: Dictionary for a single pitmaster from /data endpoint.
+        """
         self.id: int = int(data.get("id", 0))
         self.channel: int = int(data.get("channel", 0))
         self.temp: float = float(data.get("temp", 0.0))
@@ -94,6 +118,11 @@ class PitmasterTypes:
     JSON: pitmaster.type = ["off", "manual", "auto"]
     """
     def __init__(self, data: list[str] | None):
+        """
+        Initialize PitmasterTypes with available pitmaster modes.
+        Args:
+            data: List of pitmaster type strings from /data endpoint.
+        """
         self._types: list[str] = list(data or [])
     @property
     def options(self) -> list[str]:
@@ -111,6 +140,11 @@ class DeviceInfo:
     Includes hardware, firmware, and identification info.
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize DeviceInfo from /settings endpoint.
+        Args:
+            data: Dictionary from /settings endpoint's 'device' key.
+        """
         self.device: str = str(data.get("device", ""))
         self.serial: str = str(data.get("serial", ""))
         self.cpu: str = str(data.get("cpu", ""))
@@ -126,6 +160,11 @@ class SystemSettings:
     Includes network, language, and version info.
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize SystemSettings from /settings endpoint.
+        Args:
+            data: Dictionary from /settings endpoint's 'system' key.
+        """
         self.time: int = int(data.get("time", 0))
         self.unit: str = str(data.get("unit", "C"))
         self.ap: str = str(data.get("ap", ""))
@@ -140,6 +179,11 @@ class SensorType:
     Represents a sensor type (probe type) from /settings.
     """
     def __init__(self, data: Any):
+        """
+        Initialize SensorType from /settings endpoint.
+        Args:
+            data: String or dictionary representing a sensor type.
+        """
         if isinstance(data, str):
             self.type: int | None = None
             self.name: str = data
@@ -159,6 +203,11 @@ class FeatureSet:
     Features supported by the device (e.g., Bluetooth, pitmaster).
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize FeatureSet with supported features.
+        Args:
+            data: Dictionary from /settings endpoint's 'features' key.
+        """
         self.bluetooth: bool = bool(data.get("bluetooth", False))
         self.pitmaster: bool = bool(data.get("pitmaster", False))
 
@@ -183,17 +232,12 @@ class PIDConfig:
     def supports_link(self):
         return self.aktor == AKTOR_DAMPER
 
-    @staticmethod
-    def parse_bool(value: Any) -> bool:
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, (int, float)):
-            return value != 0
-        if isinstance(value, str):
-            return value.lower() in ("1", "true", "yes", "on")
-        return False
-
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize PIDConfig with PID controller configuration.
+        Args:
+            data: Dictionary for a single PID config from /settings endpoint.
+        """
         self.name: str = str(data.get("name", ""))
         self.id: int = int(data.get("id", 0))
         self.aktor: int = int(data.get("aktor", 0))
@@ -202,11 +246,11 @@ class PIDConfig:
         self.Kd: float = float(data.get("Kd", 0.0))
         self.DCmmin: int = int(data.get("DCmmin", 0))
         self.DCmmax: int = int(data.get("DCmmax", 0))
-        self.opl: bool = self.parse_bool(data.get("opl", False))
+        self.opl: bool = parse_bool(data.get("opl", False))
         self.SPmin: int = int(data.get("SPmin", 0))
         self.SPmax: int = int(data.get("SPmax", 0))
         self.link: int = int(data.get("link", 0))
-        self.tune: bool = self.parse_bool(data.get("tune", False))
+        self.tune: bool = parse_bool(data.get("tune", False))
         self.jp: int = int(data.get("jp", 0))
 
     def aktor_name(self, aktor_map: list[str]) -> str:
@@ -248,6 +292,11 @@ class DisplayInfo:
     Display settings from /settings endpoint.
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize DisplayInfo from /settings endpoint.
+        Args:
+            data: Dictionary from /settings endpoint's 'display' key.
+        """
         self.updname: str = str(data.get("updname", ""))
         self.orientation: int = int(data.get("orientation", 0))
 
@@ -256,6 +305,11 @@ class IotSettings:
     IoT cloud integration settings from /settings endpoint.
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize IotSettings from /settings endpoint.
+        Args:
+            data: Dictionary from /settings endpoint's 'iot' key.
+        """
         self.CLon: bool = bool(data.get("CLon", False))
         self.CLtoken: str = str(data.get("CLtoken", ""))
         self.CLint: int = int(data.get("CLint", 0))
@@ -267,6 +321,11 @@ class NotesExt:
     Extended notification settings (e.g., push services).
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize NotesExt with extended notification settings.
+        Args:
+            data: Dictionary from /settings endpoint's 'notes.ext' key.
+        """
         self.on: int = int(data.get("on", 0))
         self.token: str = str(data.get("token", ""))
         self.id: str = str(data.get("id", ""))
@@ -279,6 +338,11 @@ class Notes:
     Notification settings (e.g., FCM, push).
     """
     def __init__(self, data: Dict[str, Any]):
+        """
+        Initialize Notes with notification settings.
+        Args:
+            data: Dictionary from /settings endpoint's 'notes' key.
+        """
         self.fcm: list = data.get("fcm", [])
         self.ext: NotesExt = NotesExt(data.get("ext", {}))
 
@@ -288,17 +352,22 @@ class SettingsData:
     Holds device info, system settings, features, sensors, PID configs, etc.
     """
     def __init__(self, raw: Dict[str, Any]):
-        self.device = DeviceInfo(raw.get("device", {}))
-        self.system = SystemSettings(raw.get("system", {}))
-        self.hardware = raw.get("hardware", [])
-        self.api = raw.get("api", {})
-        self.sensors = [SensorType(s) for s in raw.get("sensors", [])]
-        self.features = FeatureSet(raw.get("features", {}))
-        self.pid = [PIDConfig(p) for p in raw.get("pid", [])]
-        self.aktor = raw.get("aktor", [])
-        self.display = DisplayInfo(raw.get("display", {}))
-        self.iot = IotSettings(raw.get("iot", {}))
-        self.notes = Notes(raw.get("notes", {}))
+        """
+        Initialize SettingsData with parsed /settings endpoint response.
+        Args:
+            raw: Raw dictionary from /settings endpoint.
+        """
+        self.device: DeviceInfo = DeviceInfo(raw.get("device", {}))
+        self.system: SystemSettings = SystemSettings(raw.get("system", {}))
+        self.hardware: list = raw.get("hardware", [])
+        self.api: dict = raw.get("api", {})
+        self.sensors: list[SensorType] = [SensorType(s) for s in raw.get("sensors", [])]
+        self.features: FeatureSet = FeatureSet(raw.get("features", {}))
+        self.pid: list[PIDConfig] = [PIDConfig(p) for p in raw.get("pid", [])]
+        self.aktor: list = raw.get("aktor", [])
+        self.display: DisplayInfo = DisplayInfo(raw.get("display", {}))
+        self.iot: IotSettings = IotSettings(raw.get("iot", {}))
+        self.notes: Notes = Notes(raw.get("notes", {}))
 
     @classmethod
     def from_json(cls, data: Dict[str, Any]) -> "SettingsData":
@@ -306,3 +375,94 @@ class SettingsData:
         Parse a JSON dict into a SettingsData object.
         """
         return cls(data)
+
+class PushTelegramSettings:
+    """Telegram push notification settings."""
+    def __init__(self, data: dict):
+        self.enabled: bool = parse_bool(data.get("enabled", False))
+        self.token: str = str(data.get("token", ""))
+        self.chat_id: str = str(data.get("chat_id", ""))
+        self.test: bool = parse_bool(data.get("test", False))
+
+    def to_payload(self) -> dict:
+        return {
+            "enabled": int(self.enabled),
+            "token": self.token,
+            "chat_id": self.chat_id,
+            "test": int(self.test),
+        }
+
+class PushPushoverSettings:
+    """Pushover push notification settings."""
+    def __init__(self, data: dict):
+        self.enabled: bool = parse_bool(data.get("enabled", False))
+        self.token: str = str(data.get("token", ""))
+        self.user_key: str = str(data.get("user_key", ""))
+        self.priority: int = int(data.get("priority", 0))
+
+    def to_payload(self) -> dict:
+        return {
+            "enabled": int(self.enabled),
+            "token": self.token,
+            "user_key": self.user_key,
+            "priority": self.priority,
+        }
+
+class PushAppSettings:
+    """App push notification settings."""
+    def __init__(self, data: dict):
+        self.enabled: bool = parse_bool(data.get("enabled", False))
+        self.max_devices: int = int(data.get("max_devices", 0))
+        self.devices: list = list(data.get("devices", []))
+
+    def to_payload(self) -> dict:
+        return {
+            "enabled": int(self.enabled),
+            "max_devices": self.max_devices,
+            "devices": self.devices,
+        }
+
+class PushSettings:
+    """Push notification settings from /getpush or /setpush."""
+    def __init__(self, data: dict):
+        self.telegram = PushTelegramSettings(data.get("telegram", {}))
+        self.pushover = PushPushoverSettings(data.get("pushover", {}))
+        self.app = PushAppSettings(data.get("app", {}))
+
+    @classmethod
+    def from_json(cls, data: dict) -> "PushSettings":
+        return cls(data)
+
+    def to_payload(self) -> dict:
+        return {
+            "telegram": self.telegram.to_payload(),
+            "pushover": self.pushover.to_payload(),
+            "app": self.app.to_payload(),
+        }
+    
+class BluetoothSettings:
+    """Bluetooth settings from /getbluetooth or /setbluetooth."""
+    def __init__(self, data: dict):
+        self.enabled: bool = parse_bool(data.get("enabled", False))
+        self.devices: list = list(data.get("devices", []))
+
+    @classmethod
+    def from_json(cls, data: dict) -> "BluetoothSettings":
+        return cls(data)
+
+    def to_payload(self) -> dict:
+        return {
+            "enabled": int(self.enabled),
+            "devices": self.devices,
+        }
+
+@staticmethod
+def parse_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        return value.lower() in ("1", "true", "yes", "on")
+    return False
+

@@ -5,42 +5,50 @@ Provides Home Assistant text entities for adjustable channel name and color.
 Allows users to view and (for name) set channel names and view channel color as hex.
 """
 
+
+from typing import Any, Callable
 from homeassistant.components.text import TextEntity
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
-import logging
-_LOGGER = logging.getLogger(__name__)
 
 HEX_PATTERN = r"^#[0-9A-Fa-f]{6}$"
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Callable) -> None:
     """
     Set up text entities for each channel (color and name) for WLANThermo.
+
+    Args:
+        hass: Home Assistant instance.
+        config_entry: Config entry for the integration.
+        async_add_entities: Callback to add entities.
+    Returns:
+        None.
     """
     entry_id = config_entry.entry_id
     entry_data = hass.data[DOMAIN][entry_id]
     coordinator = entry_data["coordinator"]
-
     entity_store = entry_data.setdefault("entities", {})
     entity_store.setdefault("text_channels", set())
     entity_store.setdefault("text_pidprofiles", set())
+    entity_store.setdefault("text_push", set())
 
-    async def _async_discover_entities():
+    async def _async_discover_entities() -> None:
+        """
+        Discover and add new text entities for each channel and PID profile.
+        Returns:
+            None.
+        """
         if not coordinator.data:
             return
-
         new_entities = []
-
         for channel in getattr(coordinator.data, "channels", []):
             ch_id = channel.number
-
             if ch_id not in entity_store["text_channels"]:
                 new_entities.append(
                     WlanthermoChannelNameText(coordinator, channel, entry_data)
                 )
                 entity_store["text_channels"].add(ch_id)
-
         for profile in getattr(coordinator.api.settings, "pid", []):
             pid_id = profile.id
             if pid_id not in entity_store["text_pidprofiles"]:
@@ -52,10 +60,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
                 entity_store["text_pidprofiles"].add(pid_id)
+        if coordinator.data.push:
+            if "telegram" not in entity_store["text_push"]:
+                new_entities.extend(
+                    [
+                        WlanthermoTelegramTokenText(coordinator, entry_data),
+                        WlanthermoTelegramChatIdText(coordinator, entry_data),
+                    ]
+                )
+                entity_store["text_push"].add("telegram")
+
+            if "pushover" not in entity_store["text_push"]:
+                new_entities.extend(
+                    [
+                        WlanthermoPushoverTokenText(coordinator, entry_data),
+                        WlanthermoPushoverUserKeyText(coordinator, entry_data),
+                    ]
+                )
+                entity_store["text_push"].add("pushover")
 
         if new_entities:
             async_add_entities(new_entities)
-
     coordinator.async_add_listener(_async_discover_entities)
     await _async_discover_entities()
 
@@ -64,11 +89,18 @@ class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
     """
     Text entity for displaying and setting the name of a channel.
     """
-    def __init__(self, coordinator, channel, entry_data):
+    def __init__(self, coordinator: Any, channel: Any, entry_data: dict) -> None:
+        """
+        Initialize a WlanthermoChannelNameText entity.
+        Args:
+            coordinator: Data update coordinator.
+            channel: Channel object.
+            entry_data: Dictionary with entry data.
+        Returns:
+            None.
+        """
         super().__init__(coordinator)
-
         self._channel_number = channel.number
-
         self._attr_has_entity_name = True
         self._attr_translation_key = "channel_name"
         self._attr_translation_placeholders = {
@@ -83,9 +115,11 @@ class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_info = entry_data["device_info"]
 
-    def _get_channel(self):
+    def _get_channel(self) -> Any:
         """
         Helper to get the current channel object from the coordinator data.
+        Returns:
+            Channel object or None if not found.
         """
         for ch in getattr(self.coordinator.data, "channels", []):
             if ch.number == self._channel_number:
@@ -93,21 +127,26 @@ class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
         return None
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """
         Return the current name of the channel.
+        Returns:
+            The channel name, or None if unavailable.
         """
         channel = self._get_channel()
         return channel.name if channel else None
 
-    async def async_set_value(self, value: str):
+    async def async_set_value(self, value: str) -> None:
         """
         Set a new name for the channel and update the device via the API.
+        Args:
+            value: The new channel name.
+        Returns:
+            None.
         """
         channel = self._get_channel()
         if not channel:
             return
-
         channel_data = {
             "number": channel.number,
             "name": value,
@@ -117,7 +156,6 @@ class WlanthermoChannelNameText(CoordinatorEntity, TextEntity):
             "alarm": channel.alarm,
             "color": channel.color,
         }
-
         await self.coordinator.api.async_set_channel(channel_data)
         await self.coordinator.async_request_refresh()
 
@@ -132,11 +170,18 @@ class WlanthermoPidProfileNameText(CoordinatorEntity, TextEntity):
     _attr_native_max = 14   # API: max 14 chars
     _attr_pattern = r".*"   # UTF-8 allowed
 
-    def __init__(self, coordinator, entry_data, *, profile_id: int):
+    def __init__(self, coordinator: Any, entry_data: dict, *, profile_id: int) -> None:
+        """
+        Initialize a WlanthermoPidProfileNameText entity.
+        Args:
+            coordinator: Data update coordinator.
+            entry_data: Dictionary with entry data.
+            profile_id: PID profile ID.
+        Returns:
+            None.
+        """
         super().__init__(coordinator)
-
         self._profile_id = profile_id
-
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_pid_{profile_id}_name"
         )
@@ -149,12 +194,24 @@ class WlanthermoPidProfileNameText(CoordinatorEntity, TextEntity):
 
     @property
     def native_value(self) -> str | None:
+        """
+        Return the current name of the PID profile.
+        Returns:
+            The profile name, or None if unavailable.
+        """
         for profile in getattr(self.coordinator.api.settings, "pid", []):
             if profile.id == self._profile_id:
                 return profile.name
         return None
 
-    async def async_set_value(self, value: str):
+    async def async_set_value(self, value: str) -> None:
+        """
+        Set a new name for the PID profile and update the device via the API.
+        Args:
+            value: The new profile name.
+        Returns:
+            None.
+        """
         for p in self.coordinator.api.settings.pid:
             if p.id == self._profile_id:
                 p.name = value
@@ -165,3 +222,132 @@ class WlanthermoPidProfileNameText(CoordinatorEntity, TextEntity):
                 if success:
                     await self.coordinator.async_request_refresh()
                 return
+
+class WlanthermoTelegramTokenText(CoordinatorEntity, TextEntity):
+    """Text entity for Telegram bot token."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:cloud-key-outline"
+    _attr_native_min = 0
+    _attr_native_max = 128
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "telegram_token"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_telegram_token"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.push.telegram.token
+
+    async def async_set_value(self, value: str) -> None:
+        telegram = self.coordinator.data.push.telegram
+        telegram.token = value
+
+        success = await self.coordinator.api.async_set_push({
+            "telegram": telegram.to_payload(),
+        })
+
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+
+
+class WlanthermoTelegramChatIdText(CoordinatorEntity, TextEntity):
+    """Text entity for Telegram chat ID."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:chat-plus"
+    _attr_native_min = 0
+    _attr_native_max = 32
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "telegram_chat_id"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_telegram_chat_id"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.push.telegram.chat_id
+
+    async def async_set_value(self, value: str) -> None:
+        telegram = self.coordinator.data.push.telegram
+        telegram.chat_id = value
+        success = await self.coordinator.api.async_set_push({
+            "telegram": telegram.to_payload(),
+        })
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+class WlanthermoPushoverTokenText(CoordinatorEntity, TextEntity):
+    """
+    Text entity for Pushover application token.
+    """
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:cloud-key-outline"
+    _attr_native_min = 0
+    _attr_native_max = 64
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "pushover_token"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_pushover_token"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.push.pushover.token
+
+    async def async_set_value(self, value: str) -> None:
+        pushover = self.coordinator.data.push.pushover
+        pushover.token = value
+        success = await self.coordinator.api.async_set_push({
+            "pushover": pushover.to_payload(),
+        })
+        if success:
+            await self.coordinator.async_request_refresh()
+
+
+class WlanthermoPushoverUserKeyText(CoordinatorEntity, TextEntity):
+    """
+    Text entity for Pushover user key.
+    """
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:account-key"
+    _attr_native_min = 0
+    _attr_native_max = 64
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "pushover_user_key"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_pushover_user_key"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.data.push.pushover.user_key
+
+    async def async_set_value(self, value: str) -> None:
+        pushover = self.coordinator.data.push.pushover
+        pushover.user_key = value
+        success = await self.coordinator.api.async_set_push({
+            "pushover": pushover.to_payload(),
+        })
+        if success:
+            await self.coordinator.async_request_refresh()
