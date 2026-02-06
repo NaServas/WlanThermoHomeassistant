@@ -199,3 +199,18 @@ class WLANThermoApi:
         """
         status, text = await self._request(method, "/setpush", push_data)
         return status == 200 and text and text.strip().lower() == "true"
+
+    async def async_set_iot(self, iot_data: dict, method: str = "POST") -> bool:
+        """
+        Send IoT (cloud/MQTT) configuration to the device.
+        Args:
+            iot_data: Dictionary with IoT settings.
+            --> {"PMQhost":"***.***.***.***","PMQport":****,"PMQuser":"","PMQpass":"","PMQqos":0,"PMQon":false,"PMQint":30,
+                "CLon":true,"CLtoken":"******************","CLint":15,"CLurl":"dev-cloud.wlanthermo.de/index.html"
+                }
+            method: HTTP method ('POST' or 'PUT').
+        Returns:
+            True if successful, False otherwise.
+        """
+        status, text = await self._request(method, "/setIoT", iot_data)
+        return status == 200 and text and text.strip().lower() == "true"

@@ -74,7 +74,10 @@
       "system_time": {"name": "System Time"},
       "system_info": {"name": "System Info"},
       "system_status": {"name": "System Status",
-        "state": {"offline": "Offline","online": "Online"}
+        "state": {
+          "offline": "Offline",
+          "online": "Online"
+        }
       },
       "system_update": {"name": "System Update available"},
       "battery_charging": {"name": "Battery Charging"},
@@ -82,7 +85,11 @@
       "cloud_url": {"name": "Cloud URL"},
       "cloud_link": {"name": "Cloud Link"},
       "cloud_status": {"name": "Cloud Status",
-        "state": {"not_connected": "Not connected","standby": "Standby","connected": "Connected"}
+        "state": {
+          "not_connected": "Not connected",
+          "standby": "Standby",
+          "connected": "Connected"
+        }
       },
       "channel": {"name": "Channel"},
       "channel_temperature": {"name": "Channel {channel_number} Temperature"},
@@ -96,7 +103,11 @@
       "pitmaster_value": {"name": "Pitmaster {pitmaster_number} Power"},
       "pitmaster_temperature": {"name": "Pitmaster {pitmaster_number} Temperature"},
       "pitmaster_typ": {"name": "Pitmaster {pitmaster_number} Mode",
-        "state": {"auto": "Automatic","manual": "Manual","off": "Off"}
+        "state": {
+          "auto": "Automatic",
+          "manual": "Manual",
+          "off": "Off"
+        }
       },
       "pitmaster_pid": {"name": "Pitmaster {pitmaster_number} PID Profile"},
       "pitmaster_channel": {"name": "Pitmaster {pitmaster_number} Channel"}
@@ -110,25 +121,42 @@
       "pidprofile_DCmmin": {"name": "PID Profile {profile_id} PWM Minimum"},
       "pidprofile_DCmmax": {"name": "PID Profile {profile_id} PWM Maximum"},
       "pidprofile_SPmin": {"name": "PID Profile {profile_id} Servo Minimum"},
-      "pidprofile_SPmax": {"name": "PID Profile {profile_id} Servo Maximum"}
+      "pidprofile_SPmax": {"name": "PID Profile {profile_id} Servo Maximum"},
+      "iot_pmqport": {"name": "IoT MQTT Port"},
+      "iot_pmqqos": {"name": "IoT MQTT QoS"},
+      "iot_pmqint": {"name": "IoT MQTT Interval"}
     },
     "light": {
       "channel_color": {"name": "Channel {channel_number} Color" }
     },
     "select": {
       "channel_alarm": {"name": "Channel {channel_number} Alarm Mode",
-        "options": {"off": "Off","push": "Push","buzzer": "Buzzer","push_buzzer": "Push + Buzzer"}
+        "options": {
+          "off": "Off",
+          "push": "Push",
+          "buzzer": "Buzzer",
+          "push_buzzer": "Push + Buzzer"
+        }
       },
       "channel_typ": {"name": "Channel {channel_number} Probe Type"},
       "pitmaster_typ": {"name": "Pitmaster {pitmaster_number} Mode"},
       "pitmaster_pid": {"name": "Pitmaster {pitmaster_number} PID Profile"},
       "pitmaster_channel": {"name": "Pitmaster {pitmaster_number} Channel"},
       "pidprofile_aktor": {"name": "PID Profile {profile_id} Actuator",
-                 "options": {"SSR": "SSR","FAN": "Fan","SERVO": "Servo","DAMPER": "Damper"}
-              },
+        "options": {
+          "SSR": "SSR",
+          "FAN": "Fan",
+          "SERVO": "Servo",
+          "DAMPER": "Damper"
+        }
+      },
       "pushover_priority": {"name": "Push Pushover priority",
-                 "options": {"normal": "Normal","high": "High","emergency": "Emergency"}
-              }
+        "options": {
+          "normal": "Normal",
+          "high": "High",
+          "emergency": "Emergency"
+        }
+      }
     },
     "text": {
       "channel_name": {"name": "Channel {channel_number} Name"},
@@ -136,7 +164,10 @@
       "telegram_token": {"name": "Push Telegram Token"},
       "telegram_chat_id": {"name": "Push Telegram Chat ID"},
       "pushover_token": {"name": "Push Pushover Token"},
-      "pushover_user_key": {"name": "Push Pushover User Key"}
+      "pushover_user_key": {"name": "Push Pushover User Key"},
+      "iot_pmqhost": {"name": "IoT MQTT Host"},
+      "iot_pmquser": {"name": "IoT MQTT User"},
+      "iot_pmqpass": {"name": "IoT MQTT Password"}
     },
     "switch": {
       "pidprofile_opl": {"name": "PID Profile {profile_id} Open Lid Detection"},
@@ -144,12 +175,15 @@
       "telegram_enabled": {"name": "Push Telegram Active"},
       "pushover_enabled": {"name": "Push Pushover Active"},
       "bluetooth_enabled": {"name": "Bluetooth Active"},
-      "bluetooth_probe": {"name": "Bluetooth {name} Probe {probe}"}
+      "bluetooth_probe": {"name": "Bluetooth {name} Probe {probe}"},
+      "cloud_enabled": {"name": "IoT Cloud Upload enabled"},
+      "mqtt_enabled": {"name": "IoT MQTT enabled"}
     },
     "button": {
       "telegram_test": {"name": "Push Telegram Test"},
       "pushover_test": {"name": "Push Pushover Test"},
-      "reload_integration": {"name": "Reload Integration"}
+      "reload_integration": {"name": "Reload Integration"},
+      "cloud_newtoken": {"name": "IoT Cloud Token Regenerate"}
     }
   }
 }

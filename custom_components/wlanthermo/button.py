@@ -1,10 +1,12 @@
 """
 Button platform for WLANThermo PID profile fields (opl).
 """
+import asyncio
 from typing import Any, Callable
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.button import ButtonEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.translation import async_get_translations
 from .const import DOMAIN
 import time
 import logging
@@ -61,6 +63,10 @@ async def async_setup_entry(
                     entry_data,
                 )
             )
+            entity_store["buttons"].add(key)
+        key = "cloud_newtoken"
+        if key not in entity_store["buttons"]:
+            new_entities.append(WlanthermoNewTokenButton(coordinator, entry_data))
             entity_store["buttons"].add(key)
         if new_entities:
             async_add_entities(new_entities)
@@ -172,3 +178,43 @@ class WlanthermoReloadIntegrationButton(CoordinatorEntity, ButtonEntity):
         await self.hass.config_entries.async_reload(
             self.coordinator.config_entry.entry_id
         )
+    @property
+    def available(self) -> bool:
+        return True  # Always available since it just reloads the integration
+    
+
+class WlanthermoNewTokenButton(CoordinatorEntity, ButtonEntity):
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:key-variant"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "cloud_newtoken"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._last_press = 0.0
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_cloud_newtoken"
+        self._attr_device_info = entry_data["device_info"]
+
+
+    async def async_press(self) -> None:
+        now = time.monotonic()
+        if now - self._last_press < DEBOUNCE_SECONDS:
+            return
+        self._last_press = now
+        try:
+            status, text = await self.coordinator.api._request("POST", "/newtoken")
+            if status == 200 and text:
+                new_token = text.strip()
+                self.coordinator.data.settings.iot.CLtoken = new_token
+                await self.coordinator.async_request_refresh()
+            else:
+                _LOGGER.warning("Failed to generate new IoT token: %s - %s", status, text)
+        except Exception:
+            _LOGGER.exception("Error while generating new IoT token")
+
+    @property
+    def available(self) -> bool:
+        data = self.coordinator.data
+        if not data or not data.settings or not data.settings.iot:
+            return False
+        return bool(data.settings.iot.CLon)

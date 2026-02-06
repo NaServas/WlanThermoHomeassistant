@@ -25,6 +25,8 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
     entity_store.setdefault("pidprofile_switch", set())
     entity_store.setdefault("push_switch", set())
     entity_store.setdefault("bluetooth_switch", set())
+    entity_store.setdefault("iot_switch", set())
+
 
     async def _async_discover_entities() -> None:
         """
@@ -84,6 +86,15 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
                         )
                     )
                     entity_store["bluetooth_switch"].add(key)
+        iot = getattr(coordinator.data.settings, "iot", None)
+        if iot:
+            for key, cls in (
+                ("clon", WlanthermoCloudEnabledSwitch),
+                ("pmqon", WlanthermoMqttEnabledSwitch),
+            ):
+                if key not in entity_store["iot_switch"]:
+                    new_entities.append(cls(coordinator, entry_data))
+                    entity_store["iot_switch"].add(key)
 
         if new_entities:
             async_add_entities(new_entities)
@@ -453,6 +464,78 @@ class WlanthermoBluetoothProbeSwitch(CoordinatorEntity, SwitchEntity):
         )
         if success:
             await self.coordinator.async_request_refresh()
+
+
+class WlanthermoCloudEnabledSwitch(CoordinatorEntity, SwitchEntity):
+    """
+    Switch to enable/disable WLANThermo Cloud upload.
+    """
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:cloud-upload"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "cloud_enabled"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_cloud_enabled"
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def is_on(self) -> bool:
+        iot = self.coordinator.data.settings.iot
+        return bool(iot and iot.CLon)
+
+    async def async_turn_on(self, **kwargs) -> None:
+        data = self.coordinator.data.settings.iot.__dict__.copy()
+        data["CLon"] = True
+        await self.coordinator.api.async_set_iot(data)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        data = self.coordinator.data.settings.iot.__dict__.copy()
+        data["CLon"] = False
+        await self.coordinator.api.async_set_iot(data)
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        return bool(self.coordinator.data.settings.iot)
+
+
+class WlanthermoMqttEnabledSwitch(CoordinatorEntity, SwitchEntity):
+    """
+    Switch to enable/disable MQTT publishing.
+    """
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:transmission-tower"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "mqtt_enabled"
+
+    def __init__(self, coordinator, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_mqtt_enabled"
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def is_on(self) -> bool:
+        iot = self.coordinator.data.settings.iot
+        return bool(iot and iot.PMQon)
+
+    async def async_turn_on(self, **kwargs) -> None:
+        data = self.coordinator.data.settings.iot.__dict__.copy()
+        data["PMQon"] = True
+        await self.coordinator.api.async_set_iot(data)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        data = self.coordinator.data.settings.iot.__dict__.copy()
+        data["PMQon"] = False
+        await self.coordinator.api.async_set_iot(data)
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.last_update_success
 
 
 def is_bit_set(mask: int, bit: int) -> bool:

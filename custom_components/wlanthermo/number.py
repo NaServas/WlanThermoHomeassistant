@@ -3,7 +3,7 @@ Number platform for WLANThermo adjustable values.
 Exposes min/max temperature and pitmaster values as Home Assistant number entities.
 """
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import EntityCategory
 
@@ -79,6 +79,8 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
     entity_store.setdefault("channel_numbers", set())
     entity_store.setdefault("pitmaster_numbers", set())
     entity_store.setdefault("pidprofile_numbers", set())
+    entity_store.setdefault("iot_numbers", set())
+
     # field, min, max
     PID_NUMBER_FIELDS = [
         ("jp", 0, 100),
@@ -130,6 +132,27 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
                     )
                 )
                 entity_store["pidprofile_numbers"].add(key)
+        # ---------- IoT / MQTT Numbers ----------
+        iot = getattr(coordinator.data.settings, "iot", None)
+        if iot:
+            NUMBER_FIELDS = [
+                ("PMQport", 1, 65535),
+                ("PMQqos", 0, 2),
+                ("PMQint", 1, 3600),
+            ]
+
+            for field, min_v, max_v in NUMBER_FIELDS:
+                if field not in entity_store["iot_numbers"]:
+                    new_entities.append(
+                        WlanthermoIotNumber(
+                            coordinator,
+                            entry_data,
+                            field=field,
+                            min_value=min_v,
+                            max_value=max_v,
+                        )
+                    )
+                    entity_store["iot_numbers"].add(field)
         if new_entities:
             async_add_entities(new_entities)
     await _async_discover_numbers()
@@ -317,7 +340,6 @@ class WlanthermoPitmasterNumber(CoordinatorEntity, NumberEntity):
         return self.coordinator.last_update_success
     
 
-
 class WlanthermoPidProfileNumber(CoordinatorEntity, NumberEntity):
     """
     Number entity for editable PID profile fields.
@@ -408,3 +430,51 @@ class WlanthermoPidProfileNumber(CoordinatorEntity, NumberEntity):
             if p.id == self._profile_id:
                 return p.supports_field(self._field)
         return False
+    
+
+class WlanthermoIotNumber(CoordinatorEntity, NumberEntity):
+    """
+    Generic number entity for WLANThermo IoT/MQTT numeric settings.
+    """
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_mode = NumberMode.BOX
+
+    def __init__(self, coordinator, entry_data: dict, field: str, min_value: int, max_value: int) -> None:
+        super().__init__(coordinator)
+        self._field = field
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_iot_{field.lower()}"
+        self._attr_device_info = entry_data["device_info"]
+        self._attr_native_min_value = min_value
+        self._attr_native_max_value = max_value
+        self._attr_native_step = 1
+        self._attr_translation_key = f"iot_{field.lower()}"
+
+
+    @property
+    def native_value(self) -> float | None:
+        iot = self.coordinator.data.settings.iot
+        return getattr(iot, self._field, None)
+
+    async def async_set_native_value(self, value: float) -> None:
+        data = self.coordinator.data.settings.iot.__dict__.copy()
+        data[self._field] = int(value)
+        await self.coordinator.api.async_set_iot(data)
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        if not self.coordinator.last_update_success:
+            return False
+        iot = self.coordinator.data.settings.iot
+        if not iot:
+            return False
+        switch_map = {
+            "PMQport": "PMQon",
+            "PMQqos": "PMQon",
+            "PMQint": "PMQon",
+        }
+        required_switch = switch_map.get(self._field)
+        if required_switch:
+            return bool(getattr(iot, required_switch, False))
+        return True

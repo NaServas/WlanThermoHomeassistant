@@ -302,7 +302,7 @@ class DisplayInfo:
 
 class IotSettings:
     """
-    IoT cloud integration settings from /settings endpoint.
+    IoT and MQTT cloud integration settings from /settings endpoint.
     """
     def __init__(self, data: Dict[str, Any]):
         """
@@ -315,6 +315,13 @@ class IotSettings:
         self.CLint: int = int(data.get("CLint", 0))
         self.CLurl: str = str(data.get("CLurl", ""))
         self.CLlink: str = str(data.get("CLurl", "")) + "?api_token=" + str(data.get("CLtoken", ""))
+        self.PMQhost: str = str(data.get("PMQhost", ""))
+        self.PMQport: int = int(data.get("PMQport", 0))
+        self.PMQuser: str = str(data.get("PMQuser", ""))
+        self.PMQpass: str = str(data.get("PMQpass", ""))
+        self.PMQqos: int = int(data.get("PMQqos", 0))
+        self.PMQon: bool = bool(data.get("PMQon", False))
+        self.PMQint: int = int(data.get("PMQint", 0))
 
 class NotesExt:
     """

@@ -7,7 +7,7 @@ Allows users to view and (for name) set channel names and view channel color as 
 
 
 from typing import Any, Callable
-from homeassistant.components.text import TextEntity
+from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
@@ -32,6 +32,8 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
     entity_store.setdefault("text_channels", set())
     entity_store.setdefault("text_pidprofiles", set())
     entity_store.setdefault("text_push", set())
+    entity_store.setdefault("text_iot", set())
+
 
     async def _async_discover_entities() -> None:
         """
@@ -78,6 +80,25 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: Ca
                     ]
                 )
                 entity_store["text_push"].add("pushover")
+        # ---------- IoT / MQTT Text Fields ----------
+        iot = getattr(coordinator.data.settings, "iot", None)
+        if iot:
+            TEXT_FIELDS = [
+                ("PMQhost", WlanthermoIotText),
+                ("PMQuser", WlanthermoIotText),
+                ("PMQpass", WlanthermoIotPasswordText),
+            ]
+
+            for field, cls in TEXT_FIELDS:
+                if field not in entity_store["text_iot"]:
+                    new_entities.append(
+                        cls(
+                            coordinator,
+                            entry_data,
+                            field=field,
+                        )
+                    )
+                    entity_store["text_iot"].add(field)
 
         if new_entities:
             async_add_entities(new_entities)
@@ -223,6 +244,7 @@ class WlanthermoPidProfileNameText(CoordinatorEntity, TextEntity):
                     await self.coordinator.async_request_refresh()
                 return
 
+
 class WlanthermoTelegramTokenText(CoordinatorEntity, TextEntity):
     """Text entity for Telegram bot token."""
 
@@ -254,8 +276,6 @@ class WlanthermoTelegramTokenText(CoordinatorEntity, TextEntity):
 
         if success:
             await self.coordinator.async_request_refresh()
-
-
 
 
 class WlanthermoTelegramChatIdText(CoordinatorEntity, TextEntity):
@@ -351,3 +371,53 @@ class WlanthermoPushoverUserKeyText(CoordinatorEntity, TextEntity):
         })
         if success:
             await self.coordinator.async_request_refresh()
+
+
+class WlanthermoIotText(CoordinatorEntity, TextEntity):
+    """
+    Generic text entity for WLANThermo IoT/MQTT string settings.
+    """
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator, entry_data: dict, field: str) -> None:
+        super().__init__(coordinator)
+        self._field = field
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_iot_{field.lower()}"
+        self._attr_device_info = entry_data["device_info"]
+        self._attr_translation_key = f"iot_{field.lower()}"
+
+    @property
+    def native_value(self) -> str | None:
+        iot = self.coordinator.data.settings.iot
+        return getattr(iot, self._field, None)
+
+    async def async_set_value(self, value: str) -> None:
+        data = self.coordinator.data.settings.iot.__dict__.copy()
+        data[self._field] = value
+        await self.coordinator.api.async_set_iot(data)
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        if not self.coordinator.last_update_success:
+            return False
+        iot = self.coordinator.data.settings.iot
+        if not iot:
+            return False
+        switch_map = {
+            "PMQhost": "PMQon",
+            "PMQuser": "PMQon",
+            "PMQpass": "PMQon",
+        }
+        required_switch = switch_map.get(self._field)
+        if required_switch:
+            return bool(getattr(iot, required_switch, False))
+        return True
+
+
+class WlanthermoIotPasswordText(WlanthermoIotText):
+    """
+    Password text entity for MQTT password field.
+    """
+    _attr_mode = TextMode.PASSWORD
