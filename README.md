@@ -1,7 +1,7 @@
 
 # WLANThermo – Home Assistant Integration
 
-![Version](https://img.shields.io/badge/version-0.3.0-informational)
+![Version](https://img.shields.io/badge/version-0.3.1-informational)
 ![Lizenz](https://img.shields.io/badge/license-MIT-green)
 ![Home Assistant](https://img.shields.io/badge/HA-2025.12%2B-blue)
 [![Support](https://img.shields.io/badge/support-WLANThermo%20Forum-lightgrey)](https://wlanthermo.de/forums/)
@@ -57,6 +57,7 @@ Andere Modelle und Firmware-Versionen könnten ebenfalls funktionieren, sind abe
 - ✉️ Konfiguration von Beanchrichtigungen über Pushover und Telegram
 - 📶 Bluetooth Temperatur-Sensoren Konfiguration
 - ☁️ Cloud-Sensoren 
+- 🛰️ Einrichtung IoT Felder
 - 🔋 Systemdiagnose:
   - WLAN-RSSI
   - Batteriestand
