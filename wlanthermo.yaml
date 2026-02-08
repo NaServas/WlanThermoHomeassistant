@@ -883,7 +883,7 @@ views:
                 show_states: true
               apex_config:
                 chart:
-                  height: calc(var(--wlt-height) * 5.5)
+                  height: 400
               yaxis:
                 - id: '1'
                   opposite: true
