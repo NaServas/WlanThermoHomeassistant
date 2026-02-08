@@ -90,6 +90,7 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
                 WlanthermoSystemUnitSensor(coordinator, entry_data),
                 WlanthermoSystemSocSensor(coordinator, entry_data),
                 WlanthermoLowAlarmStateSensor(coordinator, entry_data),
+                WlanthermoHighAlarmStateSensor(coordinator, entry_data),
                 WlanthermoSystemChargeSensor(coordinator, entry_data),
                 WlanthermoSystemRssiSensor(coordinator, entry_data),
                 WlanthermoCloudOnlineSensor(coordinator, entry_data),
@@ -610,19 +611,15 @@ class WlanthermoSystemSocSensor(CoordinatorEntity, SensorEntity):
     def available(self) -> bool:
         return self.coordinator.last_update_success
 
-
 class WlanthermoLowAlarmStateSensor(CoordinatorEntity, SensorEntity):
     """
     Sensor entity for a combined low alarm state.
-    Every digit represents the low alarm state of the channel (1 = alarm, 0 = no alarm).
+    Every digit represents the low alarm state of the channel (1 = alarm active, 0 = no alarm active).
     """
 
     _attr_has_entity_name = True
     _attr_translation_key = "low_alarm_state"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    # _attr_device_class = SensorDeviceClass.BATTERY
-    # _attr_state_class = SensorStateClass.MEASUREMENT
-    # _attr_native_unit_of_measurement = PERCENTAGE
     _attr_icon = "mdi:alarm-light-outline"
 
     def __init__(self, coordinator: Any, entry_data: dict) -> None:
@@ -651,7 +648,43 @@ class WlanthermoLowAlarmStateSensor(CoordinatorEntity, SensorEntity):
     def available(self) -> bool:
         return self.coordinator.last_update_success
 
+class WlanthermoHighAlarmStateSensor(CoordinatorEntity, SensorEntity):
+    """
+    Sensor entity for a combined high alarm state.
+    Every digit represents the high alarm state of the channel (1 = alarm active, 0 = no alarm active).
+    """
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "high_alarm_state"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:alarm-light-outline"
+
+    def __init__(self, coordinator: Any, entry_data: dict) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_system_high_alarm_states"
+        )
+        self._attr_device_info = entry_data["device_info"]
+
+    @property
+    def native_value(self) -> str | None:
+        channels = getattr(self.coordinator.data, "channels", [])
+
+        high_alarm_states_lis: list = list("0b000000000")
+        for ch in channels:
+            ch_alarm_state = getattr(ch, "high_alarm", None)
+            ch_nr = getattr(ch, "number", None) - 1
+            high_alarm_states_lis[-(ch_nr + 1)] = "1" if ch_alarm_state else "0"
+
+        try:
+            return "".join(high_alarm_states_lis)
+        except TypeError:
+            return None
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.last_update_success
+        
 class WlanthermoSystemChargeSensor(CoordinatorEntity, BinarySensorEntity):
     """
     Binary sensor indicating whether the battery is currently charging.
