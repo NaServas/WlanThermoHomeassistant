@@ -143,7 +143,7 @@ button_card_templates:
           const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
           const dev = variables.device_name;
           const r = states[`sensor.${dev}_kanal_${id}_restzeit`]?.state;
-          return r && r !== "0" ? `⏱ ${r}` : "⏱ ~";
+          return r && r !== "0" ? `⏱ ${Math.floor(r)} min ${Math.floor((r%1)*60)} s` : "⏱ ~";
         ]]]
 
     styles:
