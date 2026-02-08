@@ -263,7 +263,7 @@ button_card_templates:
           const dev = variables.device_name;
           const spd = parseFloat(states[`sensor.${dev}_pitmaster_${id}_leistung`]?.state || 0);
           const duration = Math.max(0.4, 3 - spd/30);
-          const anim = spd > 0
+          const anim = spd > 0 && states[`select.${dev}_pitmaster_${id}_modus`]?.state !== "off"
             ? `animation: wlt_spin_${id} ${duration}s linear infinite;`
             : `animation: none;`;
           return `
