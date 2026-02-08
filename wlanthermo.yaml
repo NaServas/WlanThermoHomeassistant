@@ -10,16 +10,17 @@ button_card_templates:
       grid:
         - row-gap: 2px
       card:
+        - --wlt-height: 70px 
+        - height: var(--wlt-height)
         - padding: 4px
-        - height: 70px
         - border-radius: 12px
       name:
         - font-size: 14px
         - font-weight: bold
         - align-self: end
       icon:
-        - width: 22px
-        - height: 22px
+        - width: calc(var(--wlt-height) * 0.3)
+        - height: calc(var(--wlt-height) * 0.3)
         - align-self: center
       custom_fields:
         time_left:
@@ -61,8 +62,8 @@ button_card_templates:
         - column-gap: 10px
         - align-items: center
       icon:
-        - width: 36px
-        - height: 36px
+        - width: calc(var(--wlt-height) * 0.5)
+        - height: calc(var(--wlt-height) * 0.5)
         - color: '#8a8f98'
       name:
         - font-size: 13px
@@ -882,7 +883,7 @@ views:
                 show_states: true
               apex_config:
                 chart:
-                  height: 400
+                  height: calc(var(--wlt-height) * 5.5)
               yaxis:
                 - id: '1'
                   opposite: true
