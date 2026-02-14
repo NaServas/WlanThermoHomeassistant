@@ -212,3 +212,59 @@
         tag: wtherm_time_alarm_notification
     enabled: true
   mode: single
+
+- id: '1771075975027'
+  alias: 'WLANThermo: Low Battery'
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.wlanthermo_batteriestand
+    below: 20
+  conditions: []
+  actions:
+  - repeat:
+      until:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: sensor.wlanthermo_batteriestand
+          state:
+          - unavailable
+          - unknown
+          for:
+            hours: 0
+            minutes: 10
+            seconds: 0
+        - condition: state
+          entity_id: sensor.wlanthermo_ladevorgang_batterie
+          state:
+          - 'on'
+        - condition: numeric_state
+          entity_id: sensor.wlanthermo_batteriestand
+          above: 30
+      sequence:
+      - action: notify.notify_all_devices
+        metadata: {}
+        data:
+          message: clear_notification
+          data:
+            tag: wtherm_battery_alarm_notification
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 0
+          milliseconds: 250
+      - action: notify.notify_all_devices
+        metadata: {}
+        data:
+          title: WLANThermo
+          message: 'Wlanthermo niedriger Batteriestand: {{states(''sensor.wlanthermo_batteriestand'')}}%'
+          data:
+            tag: wtherm_battery_alarm_notification
+      - delay:
+          hours: 0
+          minutes: 3
+          seconds: 0
+          milliseconds: 0
+  mode: single
