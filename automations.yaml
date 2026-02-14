@@ -161,7 +161,7 @@
       seconds: 0
       milliseconds: 250
     enabled: true
-  - action: notify.mobile_app_handy_basti
+  - action: notify.notify_all_devices
     metadata: {}
     data:
       title: 'WLANThermo: Zeitbenachrichtigung'
