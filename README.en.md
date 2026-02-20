@@ -81,6 +81,7 @@ The sample dashboard `wlanthermo_en.yaml` is optional and serves as a template.
 
 Wiki: [Installation](https://github.com/WLANThermo-nano/homeassistant/wiki/setup-en)  
 via HACS (recommended):  
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sochs&repository=https%3A%2F%2Fgithub.com%2FWLANThermo-nano%2Fhomeassistant&category=Integration)  
 **Custom Repository**: `https://github.com/WLANThermo-nano/homeassistant`  
 manual:  
 Copy `custom_components/wlanthermo` to `<HA config>/custom_components/`
