@@ -66,12 +66,6 @@
       "required": "Dieses Feld ist erforderlich."
     }
   }, 
-    "alarm": {
-    "off": "Aus",
-    "push": "Push",
-    "buzzer": "Signalton",
-    "push_buzzer": "Push + Signalton"
-  },
   "entity": {
     "sensor": {
       "device_info": {"name": "Geräte Info"},

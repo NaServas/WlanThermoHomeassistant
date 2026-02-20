@@ -62,12 +62,6 @@
       }
     }
   },
-  "alarm": {
-    "off": "Off",
-    "push": "Push",
-    "buzzer": "Buzzer",
-    "push_buzzer": "Push + Buzzer"
-  },
   "entity": {
     "sensor": {
       "device_info": {"name": "Device Info"},
