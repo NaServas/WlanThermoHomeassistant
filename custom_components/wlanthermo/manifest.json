@@ -7,6 +7,5 @@
   "requirements": [],
   "codeowners": ["@MStapelfeldt"],
   "config_flow": true,
-  "homeassistant": "2025.1.0",
   "iot_class": "local_polling"
 }
