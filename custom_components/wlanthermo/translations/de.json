@@ -141,7 +141,12 @@
       "pitmaster_pid": {"name": "Pitmaster {pitmaster_number} PID-Profil"},
       "pitmaster_channel": {"name": "Pitmaster {pitmaster_number} Kanal"},
       "pidprofile_aktor": {"name": "PID-Profil {profile_id} Aktor",
-          "state": {"SSR": "SSR","FAN": "Lüfter","SERVO": "Servo","DAMPER": "Klappe"}
+          "state": {
+            "ssr": "SSR",
+            "fan": "Lüfter",
+            "servo": "Servo",
+            "damper": "Klappe"
+          }
       },
       "pushover_priority": {"name": "Push Pushover Priorität",
         "state": {

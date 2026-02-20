@@ -78,10 +78,9 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
         sensor_type_map = {name: i for i, name in enumerate(sensor_types)}
 
     # Prepare PID profile and pitmaster type options for pitmasters
-    pid_profiles = []
     pitmaster_type_options: list[str] = []
     if coordinator.data and hasattr(coordinator.data, "pitmaster_types"):
-        pitmaster_type_options = coordinator.data.pitmaster_types.options
+        pitmaster_type_options = [opt.lower() for opt in coordinator.data.pitmaster_types.options]
     if not pitmaster_type_options:
         pitmaster_type_options = ["off"]
 
@@ -96,12 +95,16 @@ async def async_setup_entry(hass: Any, config_entry: Any, async_add_entities: An
         new_entities = []
         # ---------- PID PROFILE SELECTS ----------
         settings = coordinator.api.settings
-        aktor_options = getattr(settings, "aktor", [])
+        aktor_options_raw = getattr(settings, "aktor", [])
+        aktor_options = [opt.lower() for opt in aktor_options_raw]
+
+
         if not aktor_options:
             _LOGGER.warning("No aktor options found")
         else:
-            aktor_map = {name: idx for idx, name in enumerate(aktor_options)}
-            aktor_reverse = {idx: name for idx, name in enumerate(aktor_options)}
+            aktor_map = {opt: idx for idx, opt in enumerate(aktor_options)}
+            aktor_reverse = {idx: opt for idx, opt in enumerate(aktor_options)}
+
             for pid in getattr(settings, "pid", []):
                 pid_id = pid.id
                 store = entity_store.setdefault("pidprofile_selects", set())
