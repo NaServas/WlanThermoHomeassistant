@@ -129,7 +129,7 @@
     },
     "select": {
       "channel_alarm": {"name": "Kanal {channel_number} Alarmmodus",
-        "options": {
+        "state": {
           "off": "Aus",
           "push": "Push",
           "buzzer": "Summer",
@@ -141,10 +141,10 @@
       "pitmaster_pid": {"name": "Pitmaster {pitmaster_number} PID-Profil"},
       "pitmaster_channel": {"name": "Pitmaster {pitmaster_number} Kanal"},
       "pidprofile_aktor": {"name": "PID-Profil {profile_id} Aktor",
-          "options": {"SSR": "SSR","FAN": "Lüfter","SERVO": "Servo","DAMPER": "Klappe"}
+          "state": {"SSR": "SSR","FAN": "Lüfter","SERVO": "Servo","DAMPER": "Klappe"}
       },
       "pushover_priority": {"name": "Push Pushover Priorität",
-        "options": {
+        "state": {
           "normal": "Normal",
           "high": "Hoch",
           "emergency": "Notfall"
