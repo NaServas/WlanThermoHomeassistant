@@ -10,7 +10,7 @@ button_card_templates:
       grid:
         - row-gap: 2px
       card:
-        - --wlt-height: 70px 
+        - '--wlt-height': 70px
         - height: var(--wlt-height)
         - padding: 4px
         - border-radius: 12px
@@ -29,19 +29,17 @@ button_card_templates:
         minmax:
           - align-self: start
           - font-size: 12px
-          - >
+          - |
             .minmax-wrapper {
               display: flex;
               justify-content: space-between;
               align-items: center;
               width: 100%;
-            }
-            .minmax-left, .minmax-right {
+            } .minmax-left, .minmax-right {
               display: flex;
               align-items: center;
               gap: 4px;
-            }
-            ha-icon {
+            } ha-icon {
               --mdc-icon-size: 14px;
             }
         min:
@@ -82,8 +80,9 @@ button_card_templates:
         return states[`text.${dev}_kanal_${id}_name`]?.state;
       ]]]
     custom_fields:
-      icon: |
-        <ha-icon icon="mdi:thermometer" style="--mdc-icon-size: 24px;"></ha-icon>
+      icon: >
+        <ha-icon icon="mdi:thermometer" style="--mdc-icon-size:
+        24px;"></ha-icon>
       temp: |
         [[[
           const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
@@ -128,7 +127,6 @@ button_card_templates:
           return `<ha-icon icon="mdi:chevron-up" style="--mdc-icon-size:14px;"></ha-icon>
                 ${max}°C`;
         ]]]
-
       min: |
         [[[
           const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
@@ -137,7 +135,6 @@ button_card_templates:
           return `<ha-icon icon="mdi:chevron-down" style="--mdc-icon-size:14px;"></ha-icon>
                 ${min}°C`;
         ]]]
-
       time_left: |
         [[[
           const id = entity.entity_id.match(/kanal_(\d+)_/)[1];
@@ -145,7 +142,6 @@ button_card_templates:
           const r = states[`sensor.${dev}_kanal_${id}_restzeit`]?.state;
           return r && r !== "0" ? `⏱ ${r}` : "⏱ ~";
         ]]]
-
     styles:
       grid:
         - grid-template-areas: |
@@ -155,12 +151,10 @@ button_card_templates:
             "icon    time_left   min"
         - grid-template-columns: 60px 1fr 60px
         - grid-template-rows: auto auto auto auto
-
       name:
         - grid-area: name
         - font-size: 12px
         - font-weight: normal
-
       custom_fields:
         icon:
           - grid-area: icon
@@ -744,7 +738,7 @@ views:
           - type: custom:auto-entities
             card:
               type: grid
-              columns: 8
+              columns: 4
               square: false
             filter:
               include:
@@ -755,10 +749,8 @@ views:
               exclude:
                 - state: unavailable
                 - state: unknown
-              sort:
-                method: attribute
-                attribute: id
-                numeric: true
+            sort:
+              method: entity_id
             card_param: cards
           - type: grid
             columns: 2
@@ -773,11 +765,9 @@ views:
                       type: history-graph
                       hours_to_show: 1
                       fit_y_data: false
-                      min_y_axis: 10
-                      max_y_axis: 100
                     filter:
                       include:
-                        - entity_id: sensor.wlanthermo_kanal_*_temperatur
+                        - entity_id: sensor.wlanthermo_pitmaster_*_temperatur
                       exclude:
                         - state: unavailable
                         - state: unknown
@@ -878,6 +868,38 @@ views:
             card:
               type: custom:apexcharts-card
               update_interval: 5sec
+              graph_span: 3h
+              header:
+                show: false
+                show_states: true
+              apex_config:
+                chart:
+                  height: 400
+              yaxis:
+                - id: '1'
+                  opposite: true
+                  min: 0
+                  max: 100
+                - id: '0'
+                  min: 0
+                  max: 200
+                  opposite: false
+            filter:
+              exclude:
+                - state: unavailable
+                - state: unknown
+              include:
+                - entity_id: sensor.wlanthermo_kanal_*_temperatur
+                  options:
+                    yaxis_id: '0'
+                    stroke_width: 3
+            sort:
+              method: entity_id
+          - type: custom:auto-entities
+            card:
+              type: custom:apexcharts-card
+              update_interval: 5sec
+              graph_span: 3h
               header:
                 show: false
                 show_states: true
@@ -901,15 +923,11 @@ views:
                 - entity_id: sensor.wlanthermo_pitmaster_*_leistung
                   options:
                     yaxis_id: '1'
-                    stroke_width: 1
+                    stroke_width: 3
                     type: area
                     opacity: 0.25
                     curve: stepline
                 - entity_id: sensor.wlanthermo_pitmaster_*_temperatur
-                  options:
-                    yaxis_id: '0'
-                    stroke_width: 1
-                - entity_id: sensor.wlanthermo_kanal_*_temperatur
                   options:
                     yaxis_id: '0'
                     stroke_width: 3
